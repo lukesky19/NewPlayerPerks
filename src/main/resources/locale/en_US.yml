@@ -1,0 +1,13 @@
+prefix: "<aqua><bold>NewPlayerPerks</bold></aqua><gray> ▪ </gray>"
+reload: "<green>Configuration files have been reloaded.</green>"
+no-permission: "<red>You do not have permission for this command.</red>"
+unknown-argument: "<red>Unknown argument.</red>"
+invalid-player: "<red>That player is either not online or does not exist.</red>"
+added-perks: "<green>Perks have been successfully added to this player.</green>"
+removed-perks: "<green>Perks have been successfully removed from this player.</green>"
+new-player-messages:
+    - "<green>For the next 6 hours, you are now invulnerable, have keep inventory, and will be teleported to your island if you fall into the void.</green>"
+    - "<green>Use this time to get a jump start on your island and get to know the server.</green>"
+perks-expire-messages:
+    - "<red>Your invulnerability, keep inventory, void teleport perks have expired!</red>"
+    - "<red>You can now take damage, die, and you won't be teleported to your island if you fall into the void!</red>"

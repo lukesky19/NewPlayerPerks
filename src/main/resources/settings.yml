@@ -1,0 +1,9 @@
+locale: en_US
+invulnerable: true
+# Requires Essentials and the BentoBox IslandFly addon
+fly: false
+keep-inventory: true
+keep-exp: true
+# Requires BentoBox VoidTeleport addon
+void-teleport: true
+period: 6h

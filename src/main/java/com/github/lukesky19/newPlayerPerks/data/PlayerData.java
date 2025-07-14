@@ -15,26 +15,13 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package com.github.lukesky19.newPlayerPerks.configuration.locale;
+package com.github.lukesky19.newPlayerPerks.data;
 
 import com.github.lukesky19.skylib.libs.configurate.objectmapping.ConfigSerializable;
 
-import java.util.List;
-
 /**
- * This record contains the plugin's locale.
- * @param prefix The plugin's prefix.
- * @param reload The message sent when the plugin is reloaded.
- * @param addedPerks The message sent to the player who added perks to another player.
- * @param removedPerks The message sent to the player who removed perks from another player.
- * @param newPlayerMessages The {@link List} of {@link String}s to send to the player who is new.
- * @param perksExpireMessages The {@link List} of {@link String}s to send when a player's perks expire.
+ * This record contains the player's join time in milliseconds.
+ * @param joinTime The player's join time in milliseconds.
  */
 @ConfigSerializable
-public record Locale(
-        String prefix,
-        String reload,
-        String addedPerks,
-        String removedPerks,
-        List<String> newPlayerMessages,
-        List<String> perksExpireMessages) {}
+public record PlayerData(long joinTime) {}

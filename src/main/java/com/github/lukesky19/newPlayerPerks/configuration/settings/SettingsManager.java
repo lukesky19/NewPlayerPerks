@@ -1,32 +1,72 @@
+/*
+    NewPlayerPerks applies specific perks to new players.
+    Copyright (C) 2024 lukeskywlker19
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
 package com.github.lukesky19.newPlayerPerks.configuration.settings;
 
 import com.github.lukesky19.newPlayerPerks.NewPlayerPerks;
-import com.github.lukesky19.skylib.config.ConfigurationUtility;
-import com.github.lukesky19.skylib.format.FormatUtil;
+import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
+import com.github.lukesky19.skylib.api.configurate.ConfigurationUtility;
+import com.github.lukesky19.skylib.api.time.TimeUtil;
 import com.github.lukesky19.skylib.libs.configurate.ConfigurateException;
 import com.github.lukesky19.skylib.libs.configurate.yaml.YamlConfigurationLoader;
+import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.nio.file.Path;
 
+/**
+ * This class manages the plugin's settings.
+ */
 public class SettingsManager {
-    private final NewPlayerPerks newPlayerPerks;
-    private Settings settings;
-    private long period;
+    private final @NotNull NewPlayerPerks newPlayerPerks;
+    private @Nullable Settings settings;
+    private @Nullable Long period;
 
-    public SettingsManager(NewPlayerPerks newPlayerPerks) {
+    /**
+     * Constructor
+     * @param newPlayerPerks A {@link NewPlayerPerks} instance.
+     */
+    public SettingsManager(@NotNull NewPlayerPerks newPlayerPerks) {
         this.newPlayerPerks = newPlayerPerks;
     }
 
-    public Settings getSettings() {
+    /**
+     * Get the plugin's {@link Settings}.
+     * @return The plugin's {@link Settings} or null.
+     */
+    public @Nullable Settings getSettings() {
         return settings;
     }
 
-    public long getPeriod() {
+    /**
+     * Get the number of milliseconds that new player perks should last for.
+     * @return The number of milliseconds or null.
+     */
+    public @Nullable Long getPeriod() {
         return period;
     }
 
+    /**
+     * Reloads the plugin's settings.
+     */
     public void reload() {
+        ComponentLogger logger = newPlayerPerks.getComponentLogger();
         Path path = Path.of(newPlayerPerks.getDataFolder() + File.separator + "settings.yml");
 
         if(!path.toFile().exists()) {
@@ -37,11 +77,12 @@ public class SettingsManager {
         try {
             settings = loader.load().get(Settings.class);
         } catch (ConfigurateException e) {
-            throw new RuntimeException(e);
+            logger.error(AdventureUtil.serialize("Unable to load plugin settings due to an error: " + e.getMessage()));
         }
 
-        if (settings != null) {
-            period = FormatUtil.stringToMillis(settings.period());
-        }
+        if(settings == null) return;
+        if(settings.period() == null) return;
+
+        period = TimeUtil.stringToMillis(settings.period());
     }
 }

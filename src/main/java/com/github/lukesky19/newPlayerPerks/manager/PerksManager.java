@@ -1,97 +1,140 @@
+/*
+    NewPlayerPerks applies specific perks to new players.
+    Copyright (C) 2024 lukeskywlker19
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
 package com.github.lukesky19.newPlayerPerks.manager;
 
 import com.github.lukesky19.newPlayerPerks.NewPlayerPerks;
 import com.github.lukesky19.newPlayerPerks.configuration.locale.LocaleManager;
 import com.github.lukesky19.newPlayerPerks.configuration.settings.Settings;
 import com.github.lukesky19.newPlayerPerks.configuration.settings.SettingsManager;
-import com.github.lukesky19.skylib.format.FormatUtil;
+import com.github.lukesky19.newPlayerPerks.data.PlayerData;
+import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
+import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import net.luckperms.api.model.user.User;
 import net.luckperms.api.model.user.UserManager;
 import net.luckperms.api.node.types.PermissionNode;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitTask;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * This class manages perks that are applied or removed from players.
+ */
 public class PerksManager {
-    private final NewPlayerPerks newPlayerPerks;
-    private final SettingsManager settingsManager;
-    private final LocaleManager localeManager;
-    private final ConcurrentHashMap<UUID, Long> players = new ConcurrentHashMap<>();
+    private final @NotNull NewPlayerPerks newPlayerPerks;
+    private final @NotNull ComponentLogger logger;
+    private final @NotNull SettingsManager settingsManager;
+    private final @NotNull LocaleManager localeManager;
+    private final @NotNull PlayerDataManager playerDataManager;
 
-    public PerksManager(NewPlayerPerks newPlayerPerks, SettingsManager settingsManager, LocaleManager localeManager) {
+    private @Nullable BukkitTask checkPerksTask;
+
+    /**
+     * Constructor
+     * @param newPlayerPerks A {@link NewPlayerPerks} instance.
+     * @param settingsManager A {@link SettingsManager} instance.
+     * @param localeManager A {@link LocaleManager} instance.
+     * @param playerDataManager A {@link PlayerDataManager} instance.
+     */
+    public PerksManager(
+            @NotNull NewPlayerPerks newPlayerPerks,
+            @NotNull SettingsManager settingsManager,
+            @NotNull LocaleManager localeManager,
+            @NotNull PlayerDataManager playerDataManager) {
         this.newPlayerPerks = newPlayerPerks;
+        this.logger = newPlayerPerks.getComponentLogger();
         this.settingsManager = settingsManager;
         this.localeManager = localeManager;
+        this.playerDataManager = playerDataManager;
     }
 
-    public void reload() {
-        for(Player player : newPlayerPerks.getServer().getOnlinePlayers()) {
-            if(isPlayerNew(player)) {
-                if (player.isOnline() && player.isConnected()) {
-                    UUID uuid = player.getUniqueId();
-                    removePerks(player, uuid);
-                    applyPerks(player, uuid);
-                }
-            }
+    /**
+     * Based on the player's join time, does the player have perks.
+     * @param player The {@link Player} to check.
+     * @return true or false.
+     */
+    public boolean doesPlayerHavePerks(@NotNull Player player) {
+        if(settingsManager.getPeriod() == null) {
+            logger.error(AdventureUtil.serialize("Unable to check if player has perks due to an invalid period in settings.yml."));
+            return false;
+        }
+
+        PlayerData playerData = playerDataManager.getPlayerData(player.getUniqueId());
+        if(playerData == null) return false;
+
+        return System.currentTimeMillis() < (playerData.joinTime() + settingsManager.getPeriod());
+    }
+
+    /**
+     * Start the {@link BukkitTask} that checks perks.
+     */
+    public void startCheckPerksTask() {
+        checkPerksTask = newPlayerPerks.getServer().getScheduler().runTaskTimer(newPlayerPerks, this::checkPerks, 20L, 20L);
+    }
+
+    /**
+     * Stop the {@link BukkitTask} that checks perks.
+     */
+    public void stopCheckPerksTask() {
+        if(checkPerksTask != null && !checkPerksTask.isCancelled()) {
+            checkPerksTask.cancel();
+            checkPerksTask = null;
         }
     }
 
-    public boolean isPlayerNew(Player player) {
-        return players.containsKey(player.getUniqueId());
-    }
-
-    public void addplayer(Player player, UUID uuid, long time) {
-        players.put(uuid, time);
-        applyPerks(player, uuid);
-    }
-
-    public void removePlayer(UUID uuid) {
-        if(players.containsKey(uuid)) {
-            Player player = newPlayerPerks.getServer().getPlayer(uuid);
-            if(player != null && player.isOnline() && player.isConnected()) {
-                removePerks(player, uuid);
-
-                for(String msg : localeManager.getLocale().perksExpireMessages()) {
-                    player.sendMessage(FormatUtil.format(player, localeManager.getLocale().prefix() + msg));
-                }
-            }
-        }
-
-        players.remove(uuid);
-    }
-
-    public void handleLogout(Player player, UUID uuid) {
-        if(players.containsKey(uuid)) {
-            removePerks(player, uuid);
-            players.remove(uuid);
-        }
-    }
-
-    public void checkPerksTask() {
-        newPlayerPerks.getServer().getScheduler().runTaskTimer(newPlayerPerks, this::checkPerks, 1L, 20L * 600L);
-    }
-
+    /**
+     * Checks whether players with perks need them removed or not.
+     */
     private void checkPerks() {
-        for(Map.Entry<UUID, Long> uuidLongEntry : players.entrySet()) {
-            UUID uuid = uuidLongEntry.getKey();
-            long time = uuidLongEntry.getValue();
-            long expire = time + settingsManager.getPeriod();
+        if(settingsManager.getPeriod() == null) {
+            logger.error(AdventureUtil.serialize("Unable to check perks should be removed due to an invalid period in settings.yml."));
+            return;
+        }
 
-            if(System.currentTimeMillis() > expire) {
-                removePlayer(uuid);
+        for(Map.Entry<UUID, PlayerData> entry : playerDataManager.getPlayerDataMap().entrySet()) {
+            UUID uuid = entry.getKey();
+            PlayerData playerData = entry.getValue();
+
+            if(System.currentTimeMillis() > (playerData.joinTime() + settingsManager.getPeriod())) {
+                Player player = newPlayerPerks.getServer().getPlayer(uuid);
+                if(player != null && player.isOnline() && player.isConnected()) {
+                    removePerks(player, uuid, true);
+                }
             }
         }
     }
 
-    private void applyPerks(Player player, UUID uuid) {
+    /**
+     * Applies configured perks to the player provided.
+     * @param player The {@link Player}.
+     * @param uuid The {@link UUID} of the player.
+     */
+    public void applyPerks(@NotNull Player player, @NotNull UUID uuid) {
         // Get Plugin Settings
         Settings settings = settingsManager.getSettings();
+        if(settings == null) return;
 
         // Get LuckPerms User
-        UserManager userManager = newPlayerPerks.getLuckPermsApi().getUserManager();
+        UserManager userManager = newPlayerPerks.getLuckPermsAPI().getUserManager();
         User user = userManager.getUser(uuid);
         if(user != null) {
             // Invulnerable
@@ -122,9 +165,15 @@ public class PerksManager {
         }
     }
 
-    private void removePerks(Player player, UUID uuid) {
+    /**
+     * Removes configured perks to the player provided.
+     * @param player The {@link Player}.
+     * @param uuid The {@link UUID} of the player.
+     * @param sendMessage Whether to send the configured messages for when perks expire or not.
+     */
+    public void removePerks(@NotNull Player player, @NotNull UUID uuid, boolean sendMessage) {
         // Get LuckPerms User
-        UserManager userManager = newPlayerPerks.getLuckPermsApi().getUserManager();
+        UserManager userManager = newPlayerPerks.getLuckPermsAPI().getUserManager();
         User user = userManager.getUser(uuid);
 
         // Give Fly
@@ -144,5 +193,11 @@ public class PerksManager {
 
         // Save modified User
         userManager.saveUser(user);
+
+        if(sendMessage) {
+            for(String msg : localeManager.getLocale().perksExpireMessages()) {
+                player.sendMessage(AdventureUtil.serialize(player, localeManager.getLocale().prefix() + msg));
+            }
+        }
     }
 }

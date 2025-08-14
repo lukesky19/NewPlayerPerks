@@ -1,24 +1,20 @@
 name: NewPlayerPerks
-version: '1.0.0'
+version: '${version}'
 main: com.github.lukesky19.newPlayerPerks.NewPlayerPerks
 api-version: '1.21'
 depend: [SkyLib, LuckPerms]
 softdepend: [BentoBox-VoidTeleport, Essentials, BentoBox-IslandFly]
-commands:
-    newplayerperks:
-        description: The base command.
-        aliases:
-            - npp
+
 permissions:
-    newplayerperks.command.newplayerperks:
+    newplayerperks.commands.newplayerperks:
         description: Base Command Permission
         default: op
-    newplayerperks.command.newplayerperks.reload:
+    newplayerperks.commands.newplayerperks.reload:
         description: Permission to reload the plugin.
         default: op
-    newplayerperks.command.newplayerperks.add:
+    newplayerperks.commands.newplayerperks.add:
         description: Permission to give player perks.
         default: op
-    newplayerperks.command.newplayerperks.remove:
+    newplayerperks.commands.newplayerperks.remove:
         description: Permission to remove player perks.
         default: op

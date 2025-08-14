@@ -1,4 +1,4 @@
-# SkyMines
+# NewPlayerPerks
 ## Description
 * Provides the ability to apply specific perks to new players.
 
@@ -20,23 +20,20 @@
 - /newplayerperks remove <player_name> - Command to remove new player perks from a player.
 
 ## Permisisons
-- `skymines.commands.skymines` - The permission to access the /skymines command.
-- `skymines.commands.skymines.reload` - The permission to access /skymines reload.
-- `skymines.commands.skymines.help` - The permission to access /skymines help.
-- `skymines.commands.skymines.time` - The permission to access /skymines time.
-- `skymines.commands.skymines.add` - The permission to access /skymines add.
-- `skymines.commands.skymines.remove` - The permission to access /skymines remove.
-- `skymines.commands.skymines.set` - The permission to access /skymines set.
+- `newplayerperks.commands.newplayerperks` - The permission to access the /newplayerperks command.
+- `newplayerperks.commands.newplayerperks.reload` - The permission to access /newplayerperks reload.
+- `newplayerperks.commands.newplayerperks.add` - The permission to access /newplayerperks add.
+- `newplayerperks.commands.newplayerperks.remove` - The permission to access /newplayerperks remove.
 
 ## Issues, Bugs, or Suggestions
 * Please create a new [Github Issue](https://github.com/lukesky19/NewPlayerPerks/issues) with your issue, bug, or suggestion.
-* If an issue or bug, please post any relevant logs containing errors related to SkyShop and your configuration files.
+* If an issue or bug, please post any relevant logs containing errors related to NewPlayerPerks and your configuration files.
 * I will attempt to solve any issues or implement features to the best of my ability.
 
 ## FAQ
 Q: What versions does this plugin support?
 
-A: 1.21.4, 1.21.5, 1.21.6, and 1.21.7.
+A: 1.21.4, 1.21.5, 1.21.6, 1.21.7, and 1.21.8.
 
 Q: Are there any plans to support any other versions?
 

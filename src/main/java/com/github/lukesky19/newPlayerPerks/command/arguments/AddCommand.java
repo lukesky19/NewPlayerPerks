@@ -17,9 +17,9 @@
 */
 package com.github.lukesky19.newPlayerPerks.command.arguments;
 
-import com.github.lukesky19.newPlayerPerks.configuration.locale.Locale;
-import com.github.lukesky19.newPlayerPerks.configuration.locale.LocaleManager;
+import com.github.lukesky19.newPlayerPerks.data.Locale;
 import com.github.lukesky19.newPlayerPerks.data.PlayerData;
+import com.github.lukesky19.newPlayerPerks.manager.LocaleManager;
 import com.github.lukesky19.newPlayerPerks.manager.PerksManager;
 import com.github.lukesky19.newPlayerPerks.manager.PlayerDataManager;
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;

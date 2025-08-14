@@ -18,15 +18,15 @@
 package com.github.lukesky19.newPlayerPerks;
 
 import com.github.lukesky19.newPlayerPerks.command.NewPlayersPerksCommand;
-import com.github.lukesky19.newPlayerPerks.configuration.locale.LocaleManager;
-import com.github.lukesky19.newPlayerPerks.configuration.settings.SettingsManager;
 import com.github.lukesky19.newPlayerPerks.data.PlayerData;
 import com.github.lukesky19.newPlayerPerks.listener.DamageListener;
 import com.github.lukesky19.newPlayerPerks.listener.DeathListener;
 import com.github.lukesky19.newPlayerPerks.listener.JoinListener;
 import com.github.lukesky19.newPlayerPerks.listener.QuitListener;
+import com.github.lukesky19.newPlayerPerks.manager.LocaleManager;
 import com.github.lukesky19.newPlayerPerks.manager.PerksManager;
 import com.github.lukesky19.newPlayerPerks.manager.PlayerDataManager;
+import com.github.lukesky19.newPlayerPerks.manager.SettingsManager;
 import com.github.lukesky19.newPlayerPerks.manager.database.ConnectionManager;
 import com.github.lukesky19.newPlayerPerks.manager.database.DatabaseManager;
 import com.github.lukesky19.newPlayerPerks.manager.database.QueueManager;

@@ -18,7 +18,6 @@
 package com.github.lukesky19.newPlayerPerks.manager;
 
 import com.github.lukesky19.newPlayerPerks.NewPlayerPerks;
-import com.github.lukesky19.newPlayerPerks.configuration.settings.SettingsManager;
 import com.github.lukesky19.newPlayerPerks.data.PlayerData;
 import com.github.lukesky19.newPlayerPerks.manager.database.DatabaseManager;
 import com.github.lukesky19.newPlayerPerks.manager.database.tables.PlayerDataTable;

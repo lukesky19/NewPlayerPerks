@@ -18,15 +18,16 @@
 package com.github.lukesky19.newPlayerPerks.listener;
 
 import com.github.lukesky19.newPlayerPerks.NewPlayerPerks;
-import com.github.lukesky19.newPlayerPerks.configuration.locale.LocaleManager;
-import com.github.lukesky19.newPlayerPerks.configuration.settings.SettingsManager;
 import com.github.lukesky19.newPlayerPerks.data.PlayerData;
+import com.github.lukesky19.newPlayerPerks.manager.LocaleManager;
 import com.github.lukesky19.newPlayerPerks.manager.PerksManager;
 import com.github.lukesky19.newPlayerPerks.manager.PlayerDataManager;
+import com.github.lukesky19.newPlayerPerks.manager.SettingsManager;
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.jetbrains.annotations.NotNull;
@@ -70,7 +71,7 @@ public class JoinListener implements Listener {
      * Perks are applied if the system time is less than the player's join time plus the period perks are applied for.
      * @param playerJoinEvent A {@link PlayerJoinEvent}.
      */
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onJoin(PlayerJoinEvent playerJoinEvent) {
         Player player = playerJoinEvent.getPlayer();
         UUID uuid = player.getUniqueId();
@@ -87,9 +88,6 @@ public class JoinListener implements Listener {
                 logger.error(AdventureUtil.serialize("Unable to check if perks should be applied due to an invalid period in settings.yml."));
                 return;
             }
-
-            System.out.println(System.currentTimeMillis());
-            System.out.println((playerData.joinTime() + settingsManager.getPeriod()));
 
             if(System.currentTimeMillis() < (playerData.joinTime() + settingsManager.getPeriod())) {
                 perksManager.applyPerks(player, uuid);

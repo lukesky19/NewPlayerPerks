@@ -18,10 +18,8 @@
 package com.github.lukesky19.newPlayerPerks.manager;
 
 import com.github.lukesky19.newPlayerPerks.NewPlayerPerks;
-import com.github.lukesky19.newPlayerPerks.configuration.locale.LocaleManager;
-import com.github.lukesky19.newPlayerPerks.configuration.settings.Settings;
-import com.github.lukesky19.newPlayerPerks.configuration.settings.SettingsManager;
 import com.github.lukesky19.newPlayerPerks.data.PlayerData;
+import com.github.lukesky19.newPlayerPerks.data.Settings;
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import net.luckperms.api.model.user.User;

@@ -21,7 +21,7 @@ import com.github.lukesky19.newPlayerPerks.NewPlayerPerks;
 import com.github.lukesky19.newPlayerPerks.command.arguments.AddCommand;
 import com.github.lukesky19.newPlayerPerks.command.arguments.ReloadCommand;
 import com.github.lukesky19.newPlayerPerks.command.arguments.RemoveCommand;
-import com.github.lukesky19.newPlayerPerks.configuration.locale.LocaleManager;
+import com.github.lukesky19.newPlayerPerks.manager.LocaleManager;
 import com.github.lukesky19.newPlayerPerks.manager.PerksManager;
 import com.github.lukesky19.newPlayerPerks.manager.PlayerDataManager;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;

@@ -17,11 +17,12 @@
 */
 package com.github.lukesky19.newPlayerPerks.listener;
 
-import com.github.lukesky19.newPlayerPerks.configuration.settings.Settings;
-import com.github.lukesky19.newPlayerPerks.configuration.settings.SettingsManager;
+import com.github.lukesky19.newPlayerPerks.data.Settings;
 import com.github.lukesky19.newPlayerPerks.manager.PerksManager;
+import com.github.lukesky19.newPlayerPerks.manager.SettingsManager;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.jetbrains.annotations.NotNull;
@@ -49,7 +50,7 @@ public class DeathListener implements Listener {
      * Listens for a {@link PlayerDeathEvent}. If they have new player perks, and keep inventory and or keep exp is configured, the player's inventory and or exp is set to not drop.
      * @param playerDeathEvent A {@link PlayerDeathEvent}.
      */
-    @EventHandler
+    @EventHandler(priority = EventPriority.NORMAL)
     public void onDeath(PlayerDeathEvent playerDeathEvent) {
         Player player = playerDeathEvent.getPlayer();
         Settings settings = settingsManager.getSettings();

@@ -15,44 +15,30 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package com.github.lukesky19.newPlayerPerks.data;
-
-import com.github.lukesky19.skylib.libs.configurate.objectmapping.ConfigSerializable;
+package com.github.lukesky19.newPlayerPerks.util;
 
 /**
- * Contains the player's join time.
+ * This enum is used to identify the result of adding, enabling, removing, and disabling perks.
  */
-@ConfigSerializable
-public class PlayerData {
-    private long joinTime = 0;
-
+public enum PerksResult {
     /**
-     * Constructor
-     * Join time will be set to 0 by default.
+     * When perks were successfully added or removed.
      */
-    public PlayerData() {}
-
+    SUCCESS,
     /**
-     * Constructor
-     * @param joinTime The player's join time.
+     * When perks can't be enabled because they expired.
      */
-    public PlayerData(long joinTime) {
-        this.joinTime = joinTime;
-    }
-
+    EXPIRED,
     /**
-     * Set the player's join time.
-     * @param joinTime The join time to set.
+     * When perks can't be added, enabled, or removed because the plugin's settings are invalid.
      */
-    public void setJoinTime(long joinTime) {
-        this.joinTime = joinTime;
-    }
-
+    SETTINGS_ERROR,
     /**
-     * Get the player's join time.
-     * @return The player's join time.
+     * When perks can't be added, enabled, or removed because the player has no player data.
      */
-    public long getJoinTime() {
-        return joinTime;
-    }
+    NO_PLAYER_DATA,
+    /**
+     * When perks can't be added, enabled, or removed because the LuckPerms' user can't be found for the player.
+     */
+    USER_ERROR
 }

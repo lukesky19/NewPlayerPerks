@@ -1,10 +1,46 @@
+config-version: 1.1.0.0
 prefix: "<aqua><bold>NewPlayerPerks</bold></aqua><gray> ▪ </gray>"
+help:
+    - "<aqua>NewPlayerPerks is developed by <white><bold>lukeskywlker19</bold></white>.</aqua>"
+    - "<aqua>Source code is released on GitHub: <click:OPEN_URL:https://github.com/lukesky19><yellow><underlined><bold>https://github.com/lukesky19</bold></underlined></yellow></click></aqua>"
+    - " "
+    - "<green><bold>List of Commands:</bold></green>"
+    - "<white>/</white><aqua>newplayerperks</aqua> <yellow>help</yellow>"
+    - "<white>/</white><aqua>newplayerperks</aqua> <yellow>enable</yellow>"
+    - "<white>/</white><aqua>skyprestige</aqua> <yellow>disable</yellow>"
+    - "<white>/</white><aqua>skyprestige</aqua> <yellow>reload</yellow>"
+    - "<white>/</white><aqua>skyprestige</aqua> <yellow>add <player_name></yellow>"
+    - "<white>/</white><aqua>skyprestige</aqua> <yellow>remove <player_name></yellow>"
 reload: "<green>Configuration files have been reloaded.</green>"
-added-perks: "<green>Perks have been successfully added to this player.</green>"
-removed-perks: "<green>Perks have been successfully removed from this player.</green>"
-new-player-messages:
+added-perks: "<green>Perks have been successfully added to player <player_name></green>"
+removed-perks: "<green>Perks have been successfully removed from player <player_name>.</green>"
+player-data-error: "<red>Unable to process your request due to no player data found.</red>"
+user-error: "<red>Unable to process your request due to no LuckPerms' User found.</red>"
+settings-error: "<red>Unable to process your request due to invalid plugin settings.</red>"
+expired-error: "<red>Unable to process your request due to your perks having already expired.</red>"
+enable-perks-expired: "<red>Unable to enable perks because they have already expired.</red>"
+disable-perks-expired: "<red>Unable to disable perks because they have already expired.</red>"
+disable-perks-reload: "<red>Your perks have been disabled due to a plugin reload. They will be re-enabled after the reload is complete.</red>"
+perks-added-messages:
     - "<green>For the next 6 hours, you are now invulnerable, have keep inventory, and will be teleported to your island if you fall into the void.</green>"
     - "<green>Use this time to get a jump start on your island and get to know the server.</green>"
-perks-expire-messages:
+perks-enabled-messages:
+    - "<green>Your perks have been enabled. Your perks will expire at <expire_time>. Remaining time: <remaining_time></green>"
+perks-removed-messages:
+    - "<red>Your perks have been removed. You are no longer invulnerable, don't have keep inventory, and won't be teleported to your island if you fall into the void.</red>"
+perks-disabled-messages:
+    - "<green>Your perks have been disabled. You can re-enable them using /perks enable as long as they haven't expired.</green>"
+    - "<green>Your perks will expire at <expire_time>. Remaining time: <remaining_time></green>"
+perks-expired-messages:
     - "<red>Your invulnerability, keep inventory, void teleport perks have expired!</red>"
     - "<red>You can now take damage, die, and you won't be teleported to your island if you fall into the void!</red>"
+time-message:
+    prefix: ""
+    years: "<yellow><years></yellow> year(s)"
+    months: "<yellow><months></yellow> month(s)"
+    weeks: "<yellow><weeks></yellow> week(s)"
+    days: "<yellow><days></yellow> day(s)"
+    hours: "<yellow><hours></yellow> hour(s)"
+    minutes: "<yellow><minutes></yellow> minute(s)"
+    seconds: "<yellow><seconds></yellow> second(s)"
+    suffix: ""

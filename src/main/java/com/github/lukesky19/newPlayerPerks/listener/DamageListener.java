@@ -46,7 +46,7 @@ public class DamageListener implements Listener {
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onPlayerDamage(EntityDamageEvent entityDamageEvent) {
         if(entityDamageEvent.getEntity() instanceof Player && entityDamageEvent.getDamageSource().getDirectEntity() instanceof Player source) {
-            if(perksManager.doesPlayerHavePerks(source) && source.isInvulnerable()) {
+            if(perksManager.doesPlayerHavePerks(source.getUniqueId()) && source.isInvulnerable()) {
                 entityDamageEvent.setCancelled(true);
             }
         }

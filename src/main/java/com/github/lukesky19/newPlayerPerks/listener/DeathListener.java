@@ -19,13 +19,15 @@ package com.github.lukesky19.newPlayerPerks.listener;
 
 import com.github.lukesky19.newPlayerPerks.data.Settings;
 import com.github.lukesky19.newPlayerPerks.manager.PerksManager;
-import com.github.lukesky19.newPlayerPerks.manager.SettingsManager;
+import com.github.lukesky19.newPlayerPerks.manager.config.SettingsManager;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.UUID;
 
 /**
  * This class listens to when a player dies. If they have new player perks, and keep inventory and or keep exp is configured, the player's inventory and or exp is set to not drop.
@@ -52,11 +54,12 @@ public class DeathListener implements Listener {
      */
     @EventHandler(priority = EventPriority.NORMAL)
     public void onDeath(PlayerDeathEvent playerDeathEvent) {
-        Player player = playerDeathEvent.getPlayer();
         Settings settings = settingsManager.getSettings();
         if(settings == null) return;
+        Player player = playerDeathEvent.getPlayer();
+        UUID uuid = player.getUniqueId();
 
-        if(perksManager.doesPlayerHavePerks(player)) {
+        if(perksManager.doesPlayerHavePerks(uuid)) {
             if(settings.keepInventory()) {
                 playerDeathEvent.setKeepInventory(true);
                 playerDeathEvent.getDrops().clear();

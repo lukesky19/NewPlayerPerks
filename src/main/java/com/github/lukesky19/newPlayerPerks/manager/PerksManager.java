@@ -18,20 +18,27 @@
 package com.github.lukesky19.newPlayerPerks.manager;
 
 import com.github.lukesky19.newPlayerPerks.NewPlayerPerks;
+import com.github.lukesky19.newPlayerPerks.data.Locale;
 import com.github.lukesky19.newPlayerPerks.data.PlayerData;
 import com.github.lukesky19.newPlayerPerks.data.Settings;
+import com.github.lukesky19.newPlayerPerks.manager.config.LocaleManager;
+import com.github.lukesky19.newPlayerPerks.manager.config.SettingsManager;
+import com.github.lukesky19.newPlayerPerks.util.PerksResult;
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
+import com.github.lukesky19.skylib.api.time.TimeUtil;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+import net.luckperms.api.model.data.NodeMap;
 import net.luckperms.api.model.user.User;
 import net.luckperms.api.model.user.UserManager;
 import net.luckperms.api.node.types.PermissionNode;
+import org.bukkit.Server;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.Map;
-import java.util.Objects;
+import java.time.ZoneId;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -43,8 +50,6 @@ public class PerksManager {
     private final @NotNull SettingsManager settingsManager;
     private final @NotNull LocaleManager localeManager;
     private final @NotNull PlayerDataManager playerDataManager;
-
-    private @Nullable BukkitTask checkPerksTask;
 
     /**
      * Constructor
@@ -67,135 +72,263 @@ public class PerksManager {
 
     /**
      * Based on the player's join time, does the player have perks.
-     * @param player The {@link Player} to check.
+     * @param uuid The {@link UUID} of the player.
      * @return true or false.
      */
-    public boolean doesPlayerHavePerks(@NotNull Player player) {
+    public boolean doesPlayerHavePerks(@NotNull UUID uuid) {
         if(settingsManager.getPeriod() == null) {
             logger.error(AdventureUtil.serialize("Unable to check if player has perks due to an invalid period in settings.yml."));
             return false;
         }
 
-        PlayerData playerData = playerDataManager.getPlayerData(player.getUniqueId());
+        PlayerData playerData = playerDataManager.getPlayerData(uuid);
         if(playerData == null) return false;
 
-        return System.currentTimeMillis() < (playerData.joinTime() + settingsManager.getPeriod());
+        return System.currentTimeMillis() < (playerData.getJoinTime() + settingsManager.getPeriod());
     }
 
     /**
-     * Start the {@link BukkitTask} that checks perks.
+     * Enable the perks for the player.
+     * @param player The {@link Player}.
+     * @param uuid The {@link UUID} of the player.
+     * @return A {@link PerksResult}.
      */
-    public void startCheckPerksTask() {
-        checkPerksTask = newPlayerPerks.getServer().getScheduler().runTaskTimer(newPlayerPerks, this::checkPerks, 20L, 20L);
+    public @NotNull PerksResult enablePerks(@NotNull Player player, @NotNull UUID uuid) {
+        // Get Plugin Settings
+        Settings settings = settingsManager.getSettings();
+        if(settings == null) return PerksResult.SETTINGS_ERROR;
+        if(settingsManager.getPeriod() == null) return PerksResult.SETTINGS_ERROR;
+
+        // Get PlayerData
+        PlayerData playerData = playerDataManager.getPlayerData(uuid);
+        if(playerData == null) return PerksResult.NO_PLAYER_DATA;
+        // Check if perks can be applied
+        if(System.currentTimeMillis() > (playerData.getJoinTime() + settingsManager.getPeriod())) return PerksResult.EXPIRED;
+
+        // Get LuckPerms User
+        UserManager userManager = newPlayerPerks.getLuckPermsAPI().getUserManager();
+        User user = userManager.getUser(uuid);
+        if(user == null) return PerksResult.USER_ERROR;
+        NodeMap userData = user.data();
+
+        setPerks(settings, userManager, player, user, userData);
+
+        playerDataManager.addToActivePerksMap(uuid);
+
+        return PerksResult.SUCCESS;
     }
 
     /**
-     * Stop the {@link BukkitTask} that checks perks.
+     * Disable the perks for the player.
+     * @param player The {@link Player}.
+     * @param uuid The {@link UUID} of the player.
+     * @param expireCheck Should it be checked if perks have expired before disabling perks?
+     * @return A {@link PerksResult}.
      */
-    public void stopCheckPerksTask() {
-        if(checkPerksTask != null && !checkPerksTask.isCancelled()) {
-            checkPerksTask.cancel();
-            checkPerksTask = null;
+    public @NotNull PerksResult disablePerks(@NotNull Player player, @NotNull UUID uuid, boolean expireCheck) {
+        // Get Plugin Settings
+        Settings settings = settingsManager.getSettings();
+        if(settings == null) return PerksResult.SETTINGS_ERROR;
+        if(settingsManager.getPeriod() == null) return PerksResult.SETTINGS_ERROR;
+
+        if(expireCheck) {
+            // Get PlayerData
+            PlayerData playerData = playerDataManager.getPlayerData(uuid);
+            if(playerData == null) return PerksResult.NO_PLAYER_DATA;
+            // Check if perks can be applied
+            if(System.currentTimeMillis() > (playerData.getJoinTime() + settingsManager.getPeriod())) return PerksResult.EXPIRED;
         }
+
+        // Get LuckPerms User
+        UserManager userManager = newPlayerPerks.getLuckPermsAPI().getUserManager();
+        User user = userManager.getUser(uuid);
+        if(user == null) return PerksResult.USER_ERROR;
+        NodeMap userData = user.data();
+
+        unsetPerks(settings, userManager, player, user, userData);
+
+        playerDataManager.removeFromActivePerksMap(uuid);
+
+        return PerksResult.SUCCESS;
     }
 
     /**
-     * Checks whether players with perks need them removed or not.
+     * Add perks to the player by modifying their join time and then enabling perks.
+     * Use {@link #enablePerks(Player, UUID)} to enable perks based on the player's current join time.
+     * @param player The {@link Player}.
+     * @param uuid The {@link UUID} of the player.
+     * @return A {@link PerksResult}.
      */
-    private void checkPerks() {
+    public @NotNull PerksResult applyPerks(@NotNull Player player, @NotNull UUID uuid) {
+        // Get PlayerData
+        PlayerData playerData = playerDataManager.getPlayerData(uuid);
+        if(playerData == null) return PerksResult.NO_PLAYER_DATA;
+
+        // Set join time to the current system time
+        playerData.setJoinTime(System.currentTimeMillis());
+
+        playerDataManager.savePlayerData(uuid, playerData);
+
+        // Enable perks and return result
+        return enablePerks(player, uuid);
+    }
+
+    /**
+     * Removes configured perks from the player provided.
+     * @param player The {@link Player}.
+     * @param uuid The {@link UUID} of the player.
+     * @return A {@link PerksResult}.
+     */
+    public @NotNull PerksResult removePerks(@NotNull Player player, @NotNull UUID uuid) {
+        // Get PlayerData
+        PlayerData playerData = playerDataManager.getPlayerData(uuid);
+        if(playerData == null) return PerksResult.NO_PLAYER_DATA;
+
+        // Set join time to the current system time
+        playerData.setJoinTime(0);
+
+        playerDataManager.savePlayerData(uuid, playerData);
+
+        return disablePerks(player, uuid, false);
+    }
+
+    /**
+     * Enables perks for all perks that should have perks enabled based on their join time.
+     */
+    public void enableAllPerks() {
         if(settingsManager.getPeriod() == null) {
-            logger.error(AdventureUtil.serialize("Unable to check perks should be removed due to an invalid period in settings.yml."));
+            logger.error(AdventureUtil.serialize("Unable to check if perks should be applied due to an invalid period in settings.yml."));
             return;
         }
 
-        for(Map.Entry<UUID, PlayerData> entry : playerDataManager.getPlayerDataMap().entrySet()) {
-            UUID uuid = entry.getKey();
-            PlayerData playerData = entry.getValue();
+        Server server = newPlayerPerks.getServer();
 
-            if(System.currentTimeMillis() > (playerData.joinTime() + settingsManager.getPeriod())) {
-                Player player = newPlayerPerks.getServer().getPlayer(uuid);
-                if(player != null && player.isOnline() && player.isConnected()) {
-                    removePerks(player, uuid, true);
+        playerDataManager.getPlayerDataMap().forEach((uuid, playerData) -> {
+            Player player = server.getPlayer(uuid);
+            if(player != null && player.isOnline() && player.isConnected()) {
+                PerksResult perksResult = enablePerks(player, uuid);
+
+                switch(perksResult) {
+                    case SUCCESS -> {
+                        List<TagResolver.Single> placeholders = List.of(
+                                Placeholder.parsed("expire_time", TimeUtil.millisToTimeStamp((playerData.getJoinTime() + settingsManager.getPeriod()), ZoneId.of("America/New_York"), "MM-dd-yyyy HH:mm:ss z")),
+                                Placeholder.parsed("remaining_time", localeManager.getTimeMessage((playerData.getJoinTime() + settingsManager.getPeriod()) - System.currentTimeMillis())));
+
+                        for(String msg : localeManager.getLocale().perksEnabledMessages()) {
+                            player.sendMessage(AdventureUtil.serialize(player, localeManager.getLocale().prefix() + msg, placeholders));
+                        }
+                    }
+
+                    case SETTINGS_ERROR -> logger.error(AdventureUtil.serialize("Unable to apply perks due invalid plugin settings."));
+
+                    case NO_PLAYER_DATA -> logger.error(AdventureUtil.serialize("Unable to apply perks due no player data found for the player " + player.getName() + "."));
+
+                    case USER_ERROR -> logger.error(AdventureUtil.serialize("Unable to apply perks due LuckPerms user found for the player " + player.getName() + "."));
+
+                    default -> {}
                 }
             }
-        }
+        });
     }
 
     /**
-     * Applies configured perks to the player provided.
-     * @param player The {@link Player}.
-     * @param uuid The {@link UUID} of the player.
+     * Disables perks for players that have had perks applied.
+     * Does not remove them, just disables them.
+     * @param onReload Are perks being removed due to a reload?
      */
-    public void applyPerks(@NotNull Player player, @NotNull UUID uuid) {
-        // Get Plugin Settings
-        Settings settings = settingsManager.getSettings();
-        if(settings == null) return;
+    public void disableAllPerks(boolean onReload) {
+        Locale locale = localeManager.getLocale();
+        Server server = newPlayerPerks.getServer();
 
-        // Get LuckPerms User
-        UserManager userManager = newPlayerPerks.getLuckPermsAPI().getUserManager();
-        User user = userManager.getUser(uuid);
-        if(user != null) {
-            // Invulnerable
-            if(settings.invulnerable()) {
-                player.setInvulnerable(true);
-            }
+        playerDataManager.getActivePerksMap()
+            .forEach((uuid, playerData) -> {
+                Player player = server.getPlayer(uuid);
+                if(player != null && player.isOnline() && player.isConnected()) {
+                    disablePerks(player, uuid, false);
 
-            // Fly
-            if(settings.fly()) {
-                PermissionNode eFly = PermissionNode.builder("essentials.fly").value(true).build();
-                PermissionNode iFly = PermissionNode.builder("bskyblock.island.fly").value(true).build();
-                Objects.requireNonNull(user).data().add(eFly);
-                user.data().add(iFly);
-                player.setAllowFlight(true);
-                player.setFlying(true);
-            }
-
-            // NOTE: Keep Inventory and Keep Exp is checked on Death.
-
-            // Void Teleport
-            if(settings.voidTeleport()) {
-                PermissionNode voidTele = PermissionNode.builder("bskyblock.voidteleport").value(true).build();
-                user.data().add(voidTele);
-            }
-
-            // Save modified User
-            userManager.saveUser(user);
-        }
+                    if(onReload) player.sendMessage(locale.prefix() + locale.disablePerksReload());
+                }
+            });
     }
 
+
     /**
-     * Removes configured perks to the player provided.
-     * @param player The {@link Player}.
-     * @param uuid The {@link UUID} of the player.
-     * @param sendMessage Whether to send the configured messages for when perks expire or not.
+     * Set the perks based on the plugin's settings.
+     * @param settings The plugin's {@link Settings}.
+     * @param userManager LuckPerm's {@link UserManager}.
+     * @param player The {@link Player} to apply perks to.
+     * @param user The LuckPerm's {@link User} to apply perks to.
+     * @param userData The user's data from LuckPerms, See {@link User#data()}.
      */
-    public void removePerks(@NotNull Player player, @NotNull UUID uuid, boolean sendMessage) {
-        // Get LuckPerms User
-        UserManager userManager = newPlayerPerks.getLuckPermsAPI().getUserManager();
-        User user = userManager.getUser(uuid);
-
-        // Give Fly
-        PermissionNode eFly = PermissionNode.builder("essentials.fly").build();
-        PermissionNode iFly = PermissionNode.builder("bskyblock.island.fly").build();
-        Objects.requireNonNull(user).data().remove(eFly);
-        user.data().remove(iFly);
-        player.setAllowFlight(false);
-        player.setFlying(false);
-
-        // Give Void Teleport
-        PermissionNode voidTele = PermissionNode.builder("bskyblock.voidteleport").build();
-        user.data().remove(voidTele);
-
+    private void setPerks(@NotNull Settings settings, @NotNull UserManager userManager, @NotNull Player player, @NotNull User user, @NotNull NodeMap userData) {
         // Invulnerable
-        player.setInvulnerable(false);
+        if(settings.invulnerable()) {
+            player.setInvulnerable(true);
+        }
+
+        // Fly
+        if(settings.essentialsFly()) {
+            PermissionNode eFly = PermissionNode.builder("essentials.fly").value(true).build();
+            userData.add(eFly);
+            player.setAllowFlight(true);
+            player.setFlying(true);
+        }
+
+        if(settings.islandFly()) {
+            PermissionNode iFly = PermissionNode.builder("bskyblock.island.fly").value(true).build();
+            userData.add(iFly);
+            player.setAllowFlight(true);
+            player.setFlying(true);
+        }
+
+        // NOTE: Keep Inventory and Keep Exp is checked on Death.
+
+        // Void Teleport
+        if(settings.voidTeleport()) {
+            PermissionNode voidTele = PermissionNode.builder("bskyblock.voidteleport").value(true).build();
+            userData.add(voidTele);
+        }
 
         // Save modified User
         userManager.saveUser(user);
+    }
 
-        if(sendMessage) {
-            for(String msg : localeManager.getLocale().perksExpireMessages()) {
-                player.sendMessage(AdventureUtil.serialize(player, localeManager.getLocale().prefix() + msg));
-            }
+    /**
+     * Remove the perks based on the plugin's settings.
+     * @param settings The plugin's {@link Settings}.
+     * @param userManager LuckPerm's {@link UserManager}.
+     * @param player The {@link Player} to remove perks from.
+     * @param user The LuckPerm's {@link User} to remove perks from.
+     * @param userData The user's data from LuckPerms, See {@link User#data()}.
+     */
+    private void unsetPerks(@NotNull Settings settings, @NotNull UserManager userManager, @NotNull Player player, @NotNull User user, @NotNull NodeMap userData) {
+        // Invulnerable
+        if(settings.invulnerable()) {
+            player.setInvulnerable(false);
         }
+
+        // Fly
+        if(settings.essentialsFly()) {
+            PermissionNode eFly = PermissionNode.builder("essentials.fly").build();
+            userData.remove(eFly);
+            player.setAllowFlight(false);
+            player.setFlying(false);
+        }
+
+        if(settings.islandFly()) {
+            PermissionNode iFly = PermissionNode.builder("bskyblock.island.fly").build();
+            userData.remove(iFly);
+            player.setAllowFlight(false);
+            player.setFlying(false);
+        }
+
+        // Void Teleport
+        if(settings.voidTeleport()) {
+            PermissionNode voidTele = PermissionNode.builder("bskyblock.voidteleport").build();
+            userData.remove(voidTele);
+        }
+
+        // Save modified User
+        userManager.saveUser(user);
     }
 }

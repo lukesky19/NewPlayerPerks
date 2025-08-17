@@ -17,13 +17,8 @@
 */
 package com.github.lukesky19.newPlayerPerks.listener;
 
-import com.github.lukesky19.newPlayerPerks.NewPlayerPerks;
-import com.github.lukesky19.newPlayerPerks.data.PlayerData;
 import com.github.lukesky19.newPlayerPerks.manager.PerksManager;
 import com.github.lukesky19.newPlayerPerks.manager.PlayerDataManager;
-import com.github.lukesky19.newPlayerPerks.manager.SettingsManager;
-import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
-import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -37,25 +32,17 @@ import java.util.UUID;
  * This class listens to when a player disconnects from the server and removes any applied perks.
  */
 public class QuitListener implements Listener {
-    private final @NotNull ComponentLogger logger;
-    private final @NotNull SettingsManager settingsManager;
     private final @NotNull PlayerDataManager playerDataManager;
     private final @NotNull PerksManager perksManager;
 
     /**
      * Constructor
-     * @param newPlayerPerks A {@link NewPlayerPerks} instance.
-     * @param settingsManager A {@link SettingsManager} instance.
      * @param playerDataManager A {@link PlayerDataManager} instance.
      * @param perksManager A {@link PerksManager} instance.
      */
     public QuitListener(
-            @NotNull NewPlayerPerks newPlayerPerks,
-            @NotNull SettingsManager settingsManager,
             @NotNull PlayerDataManager playerDataManager,
             @NotNull PerksManager perksManager) {
-        this.logger = newPlayerPerks.getComponentLogger();
-        this.settingsManager = settingsManager;
         this.playerDataManager = playerDataManager;
         this.perksManager = perksManager;
     }
@@ -68,15 +55,9 @@ public class QuitListener implements Listener {
     public void onPlayerQuit(PlayerQuitEvent playerQuitEvent) {
         Player player = playerQuitEvent.getPlayer();
         UUID uuid = player.getUniqueId();
-        PlayerData playerData = playerDataManager.getPlayerData(uuid);
-        if(playerData == null) return;
-        if(settingsManager.getPeriod() == null) {
-            logger.error(AdventureUtil.serialize("Unable to check if perks should be removed due to an invalid period in settings.yml."));
-            return;
-        }
 
-        if(System.currentTimeMillis() < (playerData.joinTime() + settingsManager.getPeriod())) {
-            perksManager.removePerks(playerQuitEvent.getPlayer(), playerQuitEvent.getPlayer().getUniqueId(), false);
-        }
+        perksManager.disablePerks(playerQuitEvent.getPlayer(), playerQuitEvent.getPlayer().getUniqueId(), true);
+
+        playerDataManager.unloadPlayerData(uuid);
     }
 }

@@ -15,13 +15,14 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package com.github.lukesky19.newPlayerPerks.manager;
+package com.github.lukesky19.newPlayerPerks.manager.config;
 
 import com.github.lukesky19.newPlayerPerks.NewPlayerPerks;
 import com.github.lukesky19.newPlayerPerks.data.Settings;
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
 import com.github.lukesky19.skylib.api.configurate.ConfigurationUtility;
 import com.github.lukesky19.skylib.api.time.TimeUtil;
+import com.github.lukesky19.skylib.libs.configurate.CommentedConfigurationNode;
 import com.github.lukesky19.skylib.libs.configurate.ConfigurateException;
 import com.github.lukesky19.skylib.libs.configurate.yaml.YamlConfigurationLoader;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
@@ -30,6 +31,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.Objects;
 
 /**
  * This class manages the plugin's settings.
@@ -79,11 +81,55 @@ public class SettingsManager {
             settings = loader.load().get(Settings.class);
         } catch (ConfigurateException e) {
             logger.error(AdventureUtil.serialize("Unable to load plugin settings due to an error: " + e.getMessage()));
+            return;
         }
+
+        migrateSettings();
 
         if(settings == null) return;
         if(settings.period() == null) return;
 
         period = TimeUtil.stringToMillis(settings.period());
+    }
+
+    /**
+     * Migrate the plugin's settings configuration.
+     */
+    private void migrateSettings() {
+        if(settings == null) return;
+
+        switch(settings.configVersion()) {
+            case "1.1.0.0" -> {
+                // Current version, do nothing
+            }
+
+            case null -> {
+                // 1.0.0.0 -> 1.1.0.0
+                boolean flySetting = Objects.requireNonNullElse(settings.fly(), false);
+                settings = new Settings("1.1.0.0", settings.locale(), settings.invulnerable(), null, flySetting, flySetting, settings.keepInventory(), settings.keepExp(), settings.voidTeleport(), settings.period());
+
+                saveSettings();
+            }
+
+            default -> throw new RuntimeException("Unknown config version in settings.yml.");
+        }
+    }
+
+    /**
+     * Save the plugin's settings.
+     */
+    private void saveSettings() {
+        if(settings == null) return;
+        Path path = Path.of(newPlayerPerks.getDataFolder() + File.separator + "settings.yml");
+
+        YamlConfigurationLoader loader = ConfigurationUtility.getYamlConfigurationLoader(path);
+        CommentedConfigurationNode node = loader.createNode();
+        try {
+            node.set(Settings.class, settings);
+
+            loader.save(node);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

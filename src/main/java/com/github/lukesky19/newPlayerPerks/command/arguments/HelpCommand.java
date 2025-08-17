@@ -21,56 +21,51 @@ import com.github.lukesky19.newPlayerPerks.NewPlayerPerks;
 import com.github.lukesky19.newPlayerPerks.data.Locale;
 import com.github.lukesky19.newPlayerPerks.manager.config.LocaleManager;
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
-import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * This class is used to create the reload command argument.
+ * This class is used to create the help command argument.
  */
-public class ReloadCommand {
-    private final @NotNull NewPlayerPerks newPlayerPerks;
+public class HelpCommand {
+    private final @NotNull ComponentLogger logger;
     private final @NotNull LocaleManager localeManager;
-    /**
-     * Default Constructor.
-     * You should use {@link #ReloadCommand(NewPlayerPerks, LocaleManager)} instead.
-     * @deprecated You should use {@link #ReloadCommand(NewPlayerPerks, LocaleManager)} instead.
-     * @throws RuntimeException if used.
-     */
-    @Deprecated
-    public ReloadCommand() {
-        throw new RuntimeException("The use of the default constructor is not allowed.");
-    }
 
     /**
      * Constructor
      * @param newPlayerPerks A {@link NewPlayerPerks} instance.
      * @param localeManager A {@link LocaleManager} instance.
      */
-    public ReloadCommand(@NotNull NewPlayerPerks newPlayerPerks, @NotNull LocaleManager localeManager) {
-        this.newPlayerPerks = newPlayerPerks;
+    public HelpCommand(@NotNull NewPlayerPerks newPlayerPerks, @NotNull LocaleManager localeManager) {
+        this.logger = newPlayerPerks.getComponentLogger();
         this.localeManager = localeManager;
     }
 
     /**
-     * Creates the {@link LiteralCommandNode} of type {@link CommandSourceStack} for the reload command.
-     * @return A {@link LiteralCommandNode} of type {@link CommandSourceStack} for the reload command.
+     * Creates the {@link LiteralCommandNode} of type {@link CommandSourceStack} for the help command.
+     * @return A {@link LiteralCommandNode} of type {@link CommandSourceStack} for the help command.
      */
     public @NotNull LiteralCommandNode<CommandSourceStack> createCommand() {
-        LiteralArgumentBuilder<CommandSourceStack> builder = Commands.literal("reload")
-                .requires(ctx -> ctx.getSender().hasPermission("newplayerperks.commands.newplayerperks.reload"))
+        return Commands.literal("help")
+                .requires(ctx -> ctx.getSender().hasPermission("newplayerperks.commands.newplayerperks.help"))
                 .executes(ctx -> {
                     Locale locale = localeManager.getLocale();
 
-                    newPlayerPerks.reload();
-
-                    ctx.getSource().getSender().sendMessage(AdventureUtil.serialize(locale.prefix() + locale.reload()));
+                    if(ctx.getSource().getSender() instanceof Player player) {
+                        for(String msg : locale.help()) {
+                            player.sendMessage(AdventureUtil.serialize(player, msg));
+                        }
+                    } else {
+                        for(String msg : locale.help()) {
+                            logger.info(AdventureUtil.serialize(msg));
+                        }
+                    }
 
                     return 1;
-                });
-
-        return builder.build();
+                }).build();
     }
 }

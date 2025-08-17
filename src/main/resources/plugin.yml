@@ -18,3 +18,12 @@ permissions:
     newplayerperks.commands.newplayerperks.remove:
         description: Permission to remove player perks.
         default: op
+    newplayerperks.commands.newplayerperks.enable:
+        description: Permission to let a player enable their perks.
+        default: op
+    newplayerperks.commands.newplayerperks.disable:
+        description: Permission to let a player disable their perks.
+        default: op
+    newplayerperks.commands.newplayerperks.help:
+        description: Permission to view the plugin's help message.
+        default: op

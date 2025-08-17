@@ -73,12 +73,14 @@ public class NewPlayersPerksCommand {
         RemoveCommand removeCommand = new RemoveCommand(newPlayerPerks, localeManager, perksManager);
         EnableCommand enableCommand = new EnableCommand(newPlayerPerks, settingsManager, localeManager, playerDataManager, perksManager);
         DisableCommand disableCommand = new DisableCommand(newPlayerPerks, settingsManager, localeManager, playerDataManager, perksManager);
+        HelpCommand helpCommand = new HelpCommand(newPlayerPerks, localeManager);
 
         builder.then(reloadCommand.createCommand());
         builder.then(addCommand.createCommand());
         builder.then(removeCommand.createCommand());
         builder.then(enableCommand.createCommand());
         builder.then(disableCommand.createCommand());
+        builder.then(helpCommand.createCommand());
 
         return builder.build();
     }

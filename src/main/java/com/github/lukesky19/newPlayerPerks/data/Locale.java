@@ -27,6 +27,7 @@ import java.util.List;
  * This record contains the plugin's locale.
  * @param configVersion The locale's config version.
  * @param prefix The plugin's prefix.
+ * @param help The {@link List} of {@link String}s to send for the plugin's help message.
  * @param reload The message sent when the plugin is reloaded.
  * @param addedPerks The message sent to the player who added perks to another player.
  * @param removedPerks The message sent to the player who removed perks from another player.
@@ -48,6 +49,7 @@ import java.util.List;
 public record Locale(
         @Nullable String configVersion,
         String prefix,
+        @NotNull List<String> help,
         String reload,
         String addedPerks,
         String removedPerks,

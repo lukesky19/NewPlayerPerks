@@ -3,7 +3,7 @@
 * Provides the ability to apply specific perks to new players.
 
 ## Features
-* New players can be made invulnerable, given access to /fly and /is fly, given keep inventory, keep experience, and void teleport (VoidTeleport addon).
+* New players can be made invulnerable, given access to /fly, given access to, /is fly, given keep inventory, keep experience, and void teleport (VoidTeleport addon).
 
 ## Dependencies
 * LuckPerms
@@ -15,15 +15,22 @@
 * VoidTeleport Addon
 
 ## Commands
+* /newplayerperks - The base command and the command to prestige an island.
+    * Aliases: /npp, /perks, /perk
 - /newplayerperks reload - Command to reload the plugin
 - /newplayerperks add <player_name> - Command to apply new player perks to a player.
 - /newplayerperks remove <player_name> - Command to remove new player perks from a player.
+- /newplayerperks enable - Command for a player to enable their perks.
+- /newplayerperks disable - Command for a player to disable their perks.
 
 ## Permisisons
 - `newplayerperks.commands.newplayerperks` - The permission to access the /newplayerperks command.
 - `newplayerperks.commands.newplayerperks.reload` - The permission to access /newplayerperks reload.
 - `newplayerperks.commands.newplayerperks.add` - The permission to access /newplayerperks add.
 - `newplayerperks.commands.newplayerperks.remove` - The permission to access /newplayerperks remove.
+- `newplayerperks.commands.newplayerperks.enable` - The permission to access /newplayerperks enable.
+- `newplayerperks.commands.newplayerperks.disable` - The permission to access /newplayerperks disable.
+- `newplayerperks.commands.newplayerperks.help` - The permission to access /newplayerperks help.
 
 ## Issues, Bugs, or Suggestions
 * Please create a new [Github Issue](https://github.com/lukesky19/NewPlayerPerks/issues) with your issue, bug, or suggestion.

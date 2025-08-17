@@ -1,7 +1,10 @@
+config-version: 1.0.0.0
 locale: en_US
 invulnerable: true
-# Requires Essentials and the BentoBox IslandFly addon
-fly: false
+# Requires Essentials
+essentials-fly: false
+# Requires the BentoBox IslandFly addon
+island-fly: false
 keep-inventory: true
 keep-exp: true
 # Requires BentoBox VoidTeleport addon

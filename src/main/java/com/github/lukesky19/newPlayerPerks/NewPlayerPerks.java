@@ -18,15 +18,15 @@
 package com.github.lukesky19.newPlayerPerks;
 
 import com.github.lukesky19.newPlayerPerks.command.NewPlayersPerksCommand;
-import com.github.lukesky19.newPlayerPerks.data.PlayerData;
 import com.github.lukesky19.newPlayerPerks.listener.DamageListener;
 import com.github.lukesky19.newPlayerPerks.listener.DeathListener;
 import com.github.lukesky19.newPlayerPerks.listener.JoinListener;
 import com.github.lukesky19.newPlayerPerks.listener.QuitListener;
-import com.github.lukesky19.newPlayerPerks.manager.LocaleManager;
 import com.github.lukesky19.newPlayerPerks.manager.PerksManager;
 import com.github.lukesky19.newPlayerPerks.manager.PlayerDataManager;
-import com.github.lukesky19.newPlayerPerks.manager.SettingsManager;
+import com.github.lukesky19.newPlayerPerks.manager.TaskManager;
+import com.github.lukesky19.newPlayerPerks.manager.config.LocaleManager;
+import com.github.lukesky19.newPlayerPerks.manager.config.SettingsManager;
 import com.github.lukesky19.newPlayerPerks.manager.database.ConnectionManager;
 import com.github.lukesky19.newPlayerPerks.manager.database.DatabaseManager;
 import com.github.lukesky19.newPlayerPerks.manager.database.QueueManager;
@@ -37,10 +37,10 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.RegisteredServiceProvider;
+import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
-import java.util.UUID;
 
 /**
  * The main plugin class
@@ -51,6 +51,7 @@ public final class NewPlayerPerks extends JavaPlugin {
     private DatabaseManager databaseManager;
     private PlayerDataManager playerDataManager;
     private PerksManager perksManager;
+    private TaskManager taskManager;
 
     private LuckPerms luckPermsAPI;
 
@@ -82,23 +83,28 @@ public final class NewPlayerPerks extends JavaPlugin {
         QueueManager queueManager = new QueueManager(connectionManager);
         databaseManager = new DatabaseManager(connectionManager, queueManager);
 
-        playerDataManager = new PlayerDataManager(this, settingsManager, databaseManager);
+        playerDataManager = new PlayerDataManager(this, databaseManager);
         perksManager = new PerksManager(this, settingsManager, localeManager, playerDataManager);
+        taskManager = new TaskManager(this, settingsManager, playerDataManager, perksManager);
 
-        perksManager.startCheckPerksTask();
+        taskManager.startCheckPerksTask();
 
         this.getServer().getPluginManager().registerEvents(new JoinListener(this, settingsManager, localeManager, playerDataManager, perksManager), this);
-        this.getServer().getPluginManager().registerEvents(new QuitListener(this, settingsManager, playerDataManager, perksManager), this);
+        this.getServer().getPluginManager().registerEvents(new QuitListener(playerDataManager, perksManager), this);
         this.getServer().getPluginManager().registerEvents(new DamageListener(perksManager), this);
         this.getServer().getPluginManager().registerEvents(new DeathListener(settingsManager, perksManager), this);
 
-        NewPlayersPerksCommand newPlayersCommandCommand = new NewPlayersPerksCommand(this, localeManager, perksManager, playerDataManager);
+        NewPlayersPerksCommand newPlayersCommandCommand = new NewPlayersPerksCommand(this, settingsManager, localeManager, playerDataManager, perksManager);
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS,
                 commands ->
                         commands.registrar().register(newPlayersCommandCommand.createCommand(),
                                 "Command to manage and use the NewPlayerPerks plugin.",
-                                List.of("npp")));
+                                List.of("npp", "perk", "perks")));
+
+        // Create and register the NewPlayerPerksAPI
+        NewPlayerPerksAPI newPlayerPerksAPI = new NewPlayerPerksAPI(settingsManager, playerDataManager, perksManager);
+        this.getServer().getServicesManager().register(NewPlayerPerksAPI.class, newPlayerPerksAPI, this, ServicePriority.Lowest);
 
         reload();
     }
@@ -108,9 +114,17 @@ public final class NewPlayerPerks extends JavaPlugin {
      */
     @Override
     public void onDisable() {
-        if(perksManager != null) perksManager.stopCheckPerksTask();
+        if(taskManager != null) taskManager.stopCheckPerksTask();
 
-        if(databaseManager != null) databaseManager.handlePluginDisable();
+        if(perksManager != null) perksManager.disableAllPerks(false);
+
+        if(playerDataManager != null) {
+            playerDataManager.savePlayerData().thenAccept(v -> {
+                if(databaseManager != null) databaseManager.handlePluginDisable();
+            });
+        } else {
+            if(databaseManager != null) databaseManager.handlePluginDisable();
+        }
     }
 
     /**
@@ -119,37 +133,8 @@ public final class NewPlayerPerks extends JavaPlugin {
     public void reload() {
         settingsManager.reload();
         localeManager.reload();
-
-        this.getServer().getOnlinePlayers().forEach(player -> {
-            UUID uuid = player.getUniqueId();
-            PlayerData playerData = playerDataManager.getPlayerData(uuid);
-
-            if(playerData != null) {
-                perksManager.removePerks(player, uuid, false);
-            }
-        });
-
-        playerDataManager.migrateLegacyPlayerData();
-
-        playerDataManager.reload().thenAccept(v -> {
-            if(settingsManager.getPeriod() == null) {
-                this.getComponentLogger().error(AdventureUtil.serialize("Unable to check if perks should be applied due to an invalid period in settings.yml."));
-                return;
-            }
-
-            this.getServer().getOnlinePlayers().forEach(player -> {
-                UUID uuid = player.getUniqueId();
-                PlayerData playerData = playerDataManager.getPlayerData(uuid);
-
-                if(playerData != null) {
-                    if(System.currentTimeMillis() < (playerData.joinTime() + settingsManager.getPeriod())) {
-                        perksManager.applyPerks(player, uuid);
-                    } else {
-                        playerDataManager.unloadPlayerData(uuid);
-                    }
-                }
-            });
-        });
+        perksManager.disableAllPerks(true);
+        playerDataManager.reload().thenAccept(v -> perksManager.enableAllPerks());
     }
 
     /**

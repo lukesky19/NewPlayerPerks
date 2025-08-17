@@ -18,12 +18,11 @@
 package com.github.lukesky19.newPlayerPerks.command;
 
 import com.github.lukesky19.newPlayerPerks.NewPlayerPerks;
-import com.github.lukesky19.newPlayerPerks.command.arguments.AddCommand;
-import com.github.lukesky19.newPlayerPerks.command.arguments.ReloadCommand;
-import com.github.lukesky19.newPlayerPerks.command.arguments.RemoveCommand;
-import com.github.lukesky19.newPlayerPerks.manager.LocaleManager;
+import com.github.lukesky19.newPlayerPerks.command.arguments.*;
 import com.github.lukesky19.newPlayerPerks.manager.PerksManager;
 import com.github.lukesky19.newPlayerPerks.manager.PlayerDataManager;
+import com.github.lukesky19.newPlayerPerks.manager.config.LocaleManager;
+import com.github.lukesky19.newPlayerPerks.manager.config.SettingsManager;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -35,6 +34,7 @@ import org.jetbrains.annotations.NotNull;
  */
 public class NewPlayersPerksCommand {
     private final @NotNull NewPlayerPerks newPlayerPerks;
+    private final @NotNull SettingsManager settingsManager;
     private final @NotNull LocaleManager localeManager;
     private final @NotNull PerksManager perksManager;
     private final @NotNull PlayerDataManager playerDataManager;
@@ -42,16 +42,19 @@ public class NewPlayersPerksCommand {
     /**
      * Constructor
      * @param newPlayerPerks A {@link NewPlayerPerks} instance.
+     * @param settingsManager A {@link SettingsManager} instance.
      * @param localeManager A {@link LocaleManager} instance.
      * @param perksManager A {@link PerksManager} instance.
      * @param playerDataManager A {@link PlayerDataManager} instance.
      */
     public NewPlayersPerksCommand(
             @NotNull NewPlayerPerks newPlayerPerks,
+            @NotNull SettingsManager settingsManager,
             @NotNull LocaleManager localeManager,
-            @NotNull PerksManager perksManager,
-            @NotNull PlayerDataManager playerDataManager) {
+            @NotNull PlayerDataManager playerDataManager,
+            @NotNull PerksManager perksManager) {
         this.newPlayerPerks = newPlayerPerks;
+        this.settingsManager = settingsManager;
         this.localeManager = localeManager;
         this.perksManager = perksManager;
         this.playerDataManager = playerDataManager;
@@ -66,12 +69,16 @@ public class NewPlayersPerksCommand {
                 .requires(ctx -> ctx.getSender().hasPermission("newplayerperks.commands.newplayerperks"));
 
         ReloadCommand reloadCommand = new ReloadCommand(newPlayerPerks, localeManager);
-        AddCommand addCommand = new AddCommand(localeManager, perksManager, playerDataManager);
-        RemoveCommand removeCommand = new RemoveCommand(localeManager, perksManager, playerDataManager);
+        AddCommand addCommand = new AddCommand(newPlayerPerks, localeManager, perksManager);
+        RemoveCommand removeCommand = new RemoveCommand(newPlayerPerks, localeManager, perksManager);
+        EnableCommand enableCommand = new EnableCommand(newPlayerPerks, settingsManager, localeManager, playerDataManager, perksManager);
+        DisableCommand disableCommand = new DisableCommand(newPlayerPerks, settingsManager, localeManager, playerDataManager, perksManager);
 
         builder.then(reloadCommand.createCommand());
         builder.then(addCommand.createCommand());
         builder.then(removeCommand.createCommand());
+        builder.then(enableCommand.createCommand());
+        builder.then(disableCommand.createCommand());
 
         return builder.build();
     }

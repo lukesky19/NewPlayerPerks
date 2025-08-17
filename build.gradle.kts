@@ -1,10 +1,10 @@
 plugins {
     java
-    id("com.gradleup.shadow") version "8.3.5"
+    id("com.gradleup.shadow") version "8.3.6"
 }
 
 group = "com.github.lukesky19"
-version = "1.1.0.0"
+version = "1.2.0.0"
 
 repositories {
     mavenCentral()
@@ -19,7 +19,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.21.7-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")
     compileOnly("com.github.lukesky19:SkyLib:1.3.0.0")
     compileOnly("net.luckperms:api:5.4")
 }

@@ -19,13 +19,16 @@ package com.github.lukesky19.newPlayerPerks.manager.database.tables;
 
 import com.github.lukesky19.newPlayerPerks.data.PlayerData;
 import com.github.lukesky19.newPlayerPerks.manager.database.QueueManager;
+import com.github.lukesky19.skylib.api.database.parameter.Parameter;
 import com.github.lukesky19.skylib.api.database.parameter.impl.LongParameter;
 import com.github.lukesky19.skylib.api.database.parameter.impl.UUIDParameter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -96,24 +99,58 @@ public class PlayerDataTable {
      * Saves the {@link PlayerData} for the {@link UUID} provided.
      * @param uuid The {@link UUID} the {@link PlayerData} belongs to.
      * @param playerData The {@link PlayerData} to save.
+     * @return A {@link CompletableFuture} of type {@link Void} when complete.
      */
-    public void savePlayerData(@NotNull UUID uuid, @NotNull PlayerData playerData) {
+    public @NotNull CompletableFuture<Void> savePlayerData(@NotNull UUID uuid, @NotNull PlayerData playerData) {
         String insertOrUpdateSql = "INSERT INTO " + tableName + " (player_id, join_time, last_updated) " +
                 "VALUES (?, ?, ?) " +
                 "ON CONFLICT (player_id) DO UPDATE SET " +
                 "join_time = ?, last_updated = ? WHERE last_updated < ?";
 
         UUIDParameter playerIdParameter = new UUIDParameter(uuid);
-        LongParameter joinTimeParameter = new LongParameter(playerData.joinTime());
+        LongParameter joinTimeParameter = new LongParameter(playerData.getJoinTime());
         LongParameter lastUpdatedParameter = new LongParameter(System.currentTimeMillis());
 
-        queueManager.queueWriteTransaction(insertOrUpdateSql,
+        return queueManager.queueWriteTransaction(insertOrUpdateSql,
                 List.of(
                         playerIdParameter,
                         joinTimeParameter,
                         lastUpdatedParameter,
                         joinTimeParameter,
                         lastUpdatedParameter,
-                        lastUpdatedParameter));
+                        lastUpdatedParameter)).thenRun(() -> {});
+    }
+
+    /**
+     * Saves all data in the {@link Map} mapping {@link UUID}s to {@link PlayerData} provided.
+     * @param playerDataMap The {@link Map} mapping {@link UUID}s to {@link PlayerData} to save.
+     * @return A {@link CompletableFuture} of type {@link Void} when complete.
+     */
+    public @NotNull CompletableFuture<Void> savePlayerData(@NotNull Map<UUID, PlayerData> playerDataMap) {
+        String insertOrUpdateSql = "INSERT INTO " + tableName + " (player_id, join_time, last_updated) " +
+                "VALUES (?, ?, ?) " +
+                "ON CONFLICT (player_id) DO UPDATE SET " +
+                "join_time = ?, last_updated = ? WHERE last_updated < ?";
+
+        List<List<Parameter<?>>> listOfParameterLists = new ArrayList<>();
+
+        playerDataMap.forEach((uuid, playerData) -> {
+            UUIDParameter playerIdParameter = new UUIDParameter(uuid);
+            LongParameter joinTimeParameter = new LongParameter(playerData.getJoinTime());
+            LongParameter lastUpdatedParameter = new LongParameter(System.currentTimeMillis());
+
+            listOfParameterLists.add(
+                    List.of(
+                            playerIdParameter,
+                            joinTimeParameter,
+                            lastUpdatedParameter,
+                            joinTimeParameter,
+                            lastUpdatedParameter,
+                            lastUpdatedParameter));
+        });
+
+        if(listOfParameterLists.isEmpty()) return CompletableFuture.completedFuture(null);
+
+        return queueManager.queueBulkWriteTransaction(insertOrUpdateSql, listOfParameterLists).thenRun(() -> {});
     }
 }

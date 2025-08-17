@@ -22,9 +22,12 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * This record contains the plugin's settings.
+ * @param configVersion The config version of the file.
  * @param locale The locale configuration to use.
  * @param invulnerable Should new players be invulnerable?
- * @param fly Should new players have access to /fly? (Essentials and BentoBox's IslandFly addon)
+ * @param fly Legacy fly setting. Exists for migration purposes.
+ * @param essentialsFly Should new players have access to /fly?
+ * @param islandFly Should new players have access to /is fly?
  * @param keepInventory Should new players have access to keep inventory?
  * @param keepExp Should new players have access to keep exp?
  * @param voidTeleport Should new players be teleported to their island when they fall off?
@@ -32,9 +35,12 @@ import org.jetbrains.annotations.Nullable;
  */
 @ConfigSerializable
 public record Settings(
+        @Nullable String configVersion,
         @Nullable String locale,
         boolean invulnerable,
-        boolean fly,
+        @Nullable Boolean fly,
+        boolean essentialsFly,
+        boolean islandFly,
         boolean keepInventory,
         boolean keepExp,
         boolean voidTeleport,

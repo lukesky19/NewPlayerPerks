@@ -42,46 +42,21 @@ import java.util.stream.Stream;
  */
 public class PlayerDataManager {
     private final @NotNull NewPlayerPerks newPlayerPerks;
-    private final @NotNull SettingsManager settingsManager;
     private final @NotNull DatabaseManager databaseManager;
 
     private final @NotNull Map<UUID, PlayerData> playerDataMap = new HashMap<>();
+    private final @NotNull Map<UUID, PlayerData> activePerksPlayerDataMap = new HashMap<>();
 
     /**
      * Constructor
      * @param newPlayerPerks A {@link NewPlayerPerks} instance.
-     * @param settingsManager A {@link SettingsManager} instance.
      * @param databaseManager A {@link DatabaseManager} instance.
      */
     public PlayerDataManager(
             @NotNull NewPlayerPerks newPlayerPerks,
-            @NotNull SettingsManager settingsManager,
             @NotNull DatabaseManager databaseManager) {
         this.newPlayerPerks = newPlayerPerks;
-        this.settingsManager = settingsManager;
         this.databaseManager = databaseManager;
-    }
-
-    /**
-     * Reloads player data.
-     * @return A {@link CompletableFuture} of type {@link Void} when complete.
-     */
-    public @NotNull CompletableFuture<Void> reload() {
-        playerDataMap.clear();
-
-        List<CompletableFuture<PlayerData>> futuresList = new ArrayList<>();
-        newPlayerPerks.getServer().getOnlinePlayers().forEach(player ->
-                futuresList.add(loadPlayerData(player.getUniqueId())));
-
-        return CompletableFuture.allOf(futuresList.toArray(new CompletableFuture[0]));
-    }
-
-    /**
-     * Unload the player data for the {@link UUID} provided.
-     * @param uuid The {@link UUID} of the player.
-     */
-    public void unloadPlayerData(@NotNull UUID uuid) {
-        playerDataMap.remove(uuid);
     }
 
     /**
@@ -94,31 +69,82 @@ public class PlayerDataManager {
     }
 
     /**
-     * Get the {@link Map} mapping {@link UUID}s to {@link PlayerData} that have perks applied.
-     * @return A {@link Map} mapping {@link UUID}s to {@link PlayerData}.
+     * Get the {@link Map} mapping {@link UUID}s to {@link PlayerData}.
+     * @return The {@link Map} mapping {@link UUID}s to {@link PlayerData}.
      */
     public @NotNull Map<UUID, PlayerData> getPlayerDataMap() {
         return playerDataMap;
     }
 
     /**
-     * Get the {@link PlayerData} from the database. If no data exists, then a new {@link PlayerData} record will attempt to be created.
+     * Stores the player's player data in the active perks map.
+     * The active perks map is iterated over to check if their perks have expired to remove them.
+     * @param uuid The {@link UUID} of the player.
+     */
+    public void addToActivePerksMap(@NotNull UUID uuid) {
+        PlayerData playerData = playerDataMap.get(uuid);
+        if(playerData == null) return;
+
+        activePerksPlayerDataMap.put(uuid, playerData);
+    }
+
+    /**
+     * Remove the player's player data from the active perks map.
+     * @param uuid The {@link UUID} of the player.
+     */
+    public void removeFromActivePerksMap(@NotNull UUID uuid) {
+        activePerksPlayerDataMap.remove(uuid);
+    }
+
+    /**
+     * Get the {@link Map} mapping {@link UUID}s to {@link PlayerData} that have perks enabled.
+     * @return The {@link Map} mapping {@link UUID}s to {@link PlayerData} that have perks enabled.
+     */
+    public @NotNull Map<UUID, PlayerData> getActivePerksMap() {
+        return activePerksPlayerDataMap;
+    }
+
+    /**
+     * Reload player data.
+     * @return A {@link CompletableFuture} of type {@link Void} when complete.
+     */
+    public @NotNull CompletableFuture<Void> reload() {
+        return savePlayerData().thenCompose(v1 -> {
+            playerDataMap.clear();
+            activePerksPlayerDataMap.clear();
+
+            return migrateLegacyPlayerData().thenCompose(v2 -> loadPlayerData());
+        });
+    }
+
+    /**
+     * (Re-)loads player data from the database.
+     * Existing player data that is stored will be cleared.
+     * @return A {@link CompletableFuture} of type {@link Void} when complete.
+     */
+    public @NotNull CompletableFuture<Void> loadPlayerData() {
+        playerDataMap.clear();
+
+        List<CompletableFuture<PlayerData>> futuresList = new ArrayList<>();
+        newPlayerPerks.getServer().getOnlinePlayers().forEach(player ->
+                futuresList.add(loadPlayerData(player.getUniqueId())));
+
+        return CompletableFuture.allOf(futuresList.toArray(new CompletableFuture[0]));
+    }
+
+    /**
+     * Get the {@link PlayerData} from the database. If no data exists, then a new {@link PlayerData} record will be created.
      * If the plugin's settings are invalid, the returned {@link PlayerData} will be null.
      * @param uuid The {@link UUID} of the player.
-     * @return A {@link CompletableFuture} containing {@link PlayerData}, which may be null.
+     * @return A {@link CompletableFuture} containing {@link PlayerData}.
      */
-    public @NotNull CompletableFuture<@Nullable PlayerData> loadPlayerData(@NotNull UUID uuid) {
+    public @NotNull CompletableFuture<@NotNull PlayerData> loadPlayerData(@NotNull UUID uuid) {
         ComponentLogger logger = newPlayerPerks.getComponentLogger();
         PlayerDataTable playerDataTable = databaseManager.getPlayerDataTable();
 
-        if(settingsManager.getPeriod() == null) {
-            logger.error(AdventureUtil.serialize("Unable to load player data due to invalid plugin settings."));
-            return CompletableFuture.completedFuture(null);
-        }
-
         return playerDataTable.loadPlayerData(uuid).thenApply(playerData -> {
             if(playerData == null) {
-                PlayerData newPlayerData = new PlayerData(System.currentTimeMillis());
+                PlayerData newPlayerData = new PlayerData();
 
                 playerDataMap.put(uuid, newPlayerData);
 
@@ -127,8 +153,7 @@ public class PlayerDataManager {
                 return newPlayerData;
             }
 
-            // Only store player data if perks will be applied.
-            if(System.currentTimeMillis() < (playerData.joinTime() + settingsManager.getPeriod())) playerDataMap.put(uuid, playerData);
+            playerDataMap.put(uuid, playerData);
 
             return playerData;
         }).exceptionally(throwable -> {
@@ -141,26 +166,41 @@ public class PlayerDataManager {
     }
 
     /**
+     * Unload the player data for the {@link UUID} provided.
+     * @param uuid The {@link UUID} of the player.
+     */
+    public void unloadPlayerData(@NotNull UUID uuid) {
+        activePerksPlayerDataMap.remove(uuid);
+        playerDataMap.remove(uuid);
+    }
+
+    /**
      * Save the {@link PlayerData} for the {@link UUID} provided.
      * @param uuid The {@link UUID} of the player.
      * @param playerData The {@link PlayerData}.
      */
     public void savePlayerData(@NotNull UUID uuid, PlayerData playerData) {
-        if(settingsManager.getPeriod() == null) {
-            newPlayerPerks.getComponentLogger().error(AdventureUtil.serialize("Unable to save player data due to invalid plugin settings."));
-            return;
-        }
-
-        if(System.currentTimeMillis() < (playerData.joinTime() + settingsManager.getPeriod())) playerDataMap.put(uuid, playerData);
-
         PlayerDataTable playerDataTable = databaseManager.getPlayerDataTable();
         playerDataTable.savePlayerData(uuid, playerData);
+
+        playerDataMap.put(uuid, playerData);
+    }
+
+    /**
+     * Save the {@link PlayerData} for  all loaded player data.
+     * @return A {@link CompletableFuture} of type {@link Void} when complete.
+     */
+    public @NotNull CompletableFuture<Void> savePlayerData() {
+        PlayerDataTable playerDataTable = databaseManager.getPlayerDataTable();
+
+        return playerDataTable.savePlayerData(playerDataMap);
     }
 
     /**
      * Loads and migrates all legacy player data and saves the updated player data to the database.
+     * @return A {@link CompletableFuture} of type {@link Void} when complete.
      */
-    public void migrateLegacyPlayerData() {
+    public @NotNull CompletableFuture<Void> migrateLegacyPlayerData() {
         ComponentLogger logger = newPlayerPerks.getComponentLogger();
 
         try {
@@ -168,10 +208,12 @@ public class PlayerDataManager {
 
             Path playerDataPath = Path.of(newPlayerPerks.getDataFolder() + File.separator + "playerdata");
             // If the path is not a directory, don't migrate any data.
-            if (!Files.isDirectory(playerDataPath)) return;
+            if (!Files.isDirectory(playerDataPath)) return CompletableFuture.completedFuture(null);
 
             // Don't migrate player data if the path's directory doesn't exist.
-            if (!Files.exists(playerDataPath)) return;
+            if (!Files.exists(playerDataPath)) return CompletableFuture.completedFuture(null);
+
+            List<CompletableFuture<Void>> futureList = new ArrayList<>();
 
             try (Stream<Path> paths = Files.walk(playerDataPath)) {
                 paths.filter(Files::isRegularFile)
@@ -184,7 +226,7 @@ public class PlayerDataManager {
                             try {
                                 PlayerData playerData = loader.load().get(PlayerData.class);
                                 if (playerData != null) {
-                                    playerDataTable.savePlayerData(uuid, playerData);
+                                    futureList.add(playerDataTable.savePlayerData(uuid, playerData));
                                 }
 
                                 try {
@@ -198,7 +240,7 @@ public class PlayerDataManager {
                         });
             } catch (IOException e) {
                 logger.warn(AdventureUtil.serialize("Failed to migrate legacy player data. Error: " + e.getMessage()));
-                return;
+                return CompletableFuture.completedFuture(null);
             }
 
             // If the player data folder is empty, delete the directory
@@ -208,10 +250,14 @@ public class PlayerDataManager {
                     Files.delete(playerDataPath);
                 }
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                logger.error(AdventureUtil.serialize(e.getMessage()));
+                return CompletableFuture.completedFuture(null);
             }
+
+            return CompletableFuture.allOf(futureList.toArray(new CompletableFuture[0]));
         } catch (RuntimeException e) {
             logger.error(AdventureUtil.serialize(e.getMessage()));
+            return CompletableFuture.completedFuture(null);
         }
     }
 }

@@ -1,5 +1,6 @@
 plugins {
     java
+    `maven-publish`
     id("com.gradleup.shadow") version "8.3.6"
 }
 
@@ -47,6 +48,15 @@ tasks {
     }
 
     build {
+        dependsOn(publishToMavenLocal)
         dependsOn(javadoc)
+    }
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            from(components["java"])
+        }
     }
 }

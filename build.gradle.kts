@@ -1,10 +1,11 @@
 plugins {
     java
-    id("com.gradleup.shadow") version "8.3.6"
+    `maven-publish`
+    id("com.gradleup.shadow") version "9.2.2"
 }
 
 group = "com.github.lukesky19"
-version = "1.2.0.0"
+version = "1.2.0.1"
 
 repositories {
     mavenCentral()
@@ -19,8 +20,8 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")
-    compileOnly("com.github.lukesky19:SkyLib:1.3.0.0")
+    compileOnly("io.papermc.paper:paper-api:1.21.9-R0.1-SNAPSHOT")
+    compileOnly("com.github.lukesky19:SkyLib:1.3.1.0")
     compileOnly("net.luckperms:api:5.4")
 }
 
@@ -47,6 +48,15 @@ tasks {
     }
 
     build {
+        dependsOn(publishToMavenLocal)
         dependsOn(javadoc)
+    }
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            from(components["java"])
+        }
     }
 }

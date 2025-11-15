@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.github.lukesky19"
-version = "1.2.0.1"
+version = "1.2.0.2"
 
 repositories {
     mavenCentral()
@@ -20,7 +20,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.21.9-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:1.21.10-R0.1-SNAPSHOT")
     compileOnly("com.github.lukesky19:SkyLib:1.3.1.0")
     compileOnly("net.luckperms:api:5.4")
 }

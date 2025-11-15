@@ -86,6 +86,10 @@ public class JoinListener implements Listener {
         }
 
         playerDataManager.loadPlayerData(uuid).thenAccept(playerData -> {
+            if(!player.hasPlayedBefore()) {
+                playerData.setJoinTime(player.getFirstPlayed());
+            }
+
             PerksResult perksResult = perksManager.enablePerks(player, uuid);
 
             switch(perksResult) {
@@ -103,7 +107,7 @@ public class JoinListener implements Listener {
 
                 case NO_PLAYER_DATA -> logger.error(AdventureUtil.serialize("Unable to apply perks due no player data found for the player " + player.getName() + "."));
 
-                case USER_ERROR -> logger.error(AdventureUtil.serialize("Unable to apply perks due LuckPerms user found for the player " + player.getName() + "."));
+                case USER_ERROR -> logger.error(AdventureUtil.serialize("Unable to apply perks due to no LuckPerms user found for the player " + player.getName() + "."));
 
                 default -> {}
             }

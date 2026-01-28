@@ -18,13 +18,12 @@
 package com.github.lukesky19.newPlayerPerks.listener;
 
 import com.github.lukesky19.newPlayerPerks.NewPlayerPerks;
+import com.github.lukesky19.newPlayerPerks.locale.LocaleManager;
 import com.github.lukesky19.newPlayerPerks.manager.PerksManager;
 import com.github.lukesky19.newPlayerPerks.manager.PlayerDataManager;
-import com.github.lukesky19.newPlayerPerks.manager.config.LocaleManager;
-import com.github.lukesky19.newPlayerPerks.manager.config.SettingsManager;
+import com.github.lukesky19.newPlayerPerks.settings.SettingsManager;
 import com.github.lukesky19.newPlayerPerks.util.PerksResult;
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
-import com.github.lukesky19.skylib.api.time.TimeUtil;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -35,7 +34,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.jetbrains.annotations.NotNull;
 
-import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
 
@@ -85,18 +83,19 @@ public class JoinListener implements Listener {
             return;
         }
 
-        playerDataManager.loadPlayerData(uuid).thenAccept(playerData -> {
+        playerDataManager.loadPlayerData(player, uuid).thenAccept(playerData -> {
             if(!player.hasPlayedBefore()) {
                 playerData.setJoinTime(player.getFirstPlayed());
+                playerData.setPerkTime(settingsManager.getPeriod());
             }
 
             PerksResult perksResult = perksManager.enablePerks(player, uuid);
-
             switch(perksResult) {
                 case SUCCESS -> {
+                    playerData.setPerksPaused(false);
+
                     List<TagResolver.Single> placeholders = List.of(
-                            Placeholder.parsed("expire_time", TimeUtil.millisToTimeStamp((playerData.getJoinTime() + settingsManager.getPeriod()), ZoneId.of("America/New_York"), "MM-dd-yyyy HH:mm:ss z")),
-                            Placeholder.parsed("remaining_time", localeManager.getTimeMessage((playerData.getJoinTime() + settingsManager.getPeriod()) - System.currentTimeMillis())));
+                            Placeholder.parsed("remaining_time", localeManager.getTimeMessage(playerData.getPerkTime())));
 
                     for(String msg : localeManager.getLocale().perksEnabledMessages()) {
                         player.sendMessage(AdventureUtil.deserialize(player, localeManager.getLocale().prefix() + msg, placeholders));
@@ -111,6 +110,8 @@ public class JoinListener implements Listener {
 
                 default -> {}
             }
+
+            playerDataManager.savePlayerData(uuid, playerData);
         });
     }
 }

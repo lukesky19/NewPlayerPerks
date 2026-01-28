@@ -18,15 +18,14 @@
 package com.github.lukesky19.newPlayerPerks.manager;
 
 import com.github.lukesky19.newPlayerPerks.NewPlayerPerks;
-import com.github.lukesky19.newPlayerPerks.data.Locale;
 import com.github.lukesky19.newPlayerPerks.data.PlayerData;
-import com.github.lukesky19.newPlayerPerks.data.Settings;
-import com.github.lukesky19.newPlayerPerks.manager.config.LocaleManager;
-import com.github.lukesky19.newPlayerPerks.manager.config.SettingsManager;
+import com.github.lukesky19.newPlayerPerks.locale.Locale;
+import com.github.lukesky19.newPlayerPerks.locale.LocaleManager;
+import com.github.lukesky19.newPlayerPerks.settings.Settings;
+import com.github.lukesky19.newPlayerPerks.settings.SettingsManager;
 import com.github.lukesky19.newPlayerPerks.util.PerksResult;
 import com.github.lukesky19.skyFlight.SkyFlightAPI;
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
-import com.github.lukesky19.skylib.api.time.TimeUtil;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -41,7 +40,6 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
 
@@ -84,7 +82,7 @@ public class PerksManager {
     }
 
     /**
-     * Based on the player's join time, does the player have perks.
+     * Based on the player's perk time, does the player have perks.
      * @param uuid The {@link UUID} of the player.
      * @return true or false.
      */
@@ -97,7 +95,7 @@ public class PerksManager {
         PlayerData playerData = playerDataManager.getPlayerData(uuid);
         if(playerData == null) return false;
 
-        return System.currentTimeMillis() < (playerData.getJoinTime() + settingsManager.getPeriod());
+        return playerData.getPerkTime() > 0;
     }
 
     /**
@@ -116,7 +114,7 @@ public class PerksManager {
         PlayerData playerData = playerDataManager.getPlayerData(uuid);
         if(playerData == null) return PerksResult.NO_PLAYER_DATA;
         // Check if perks can be applied
-        if(System.currentTimeMillis() > (playerData.getJoinTime() + settingsManager.getPeriod())) return PerksResult.EXPIRED;
+        if(playerData.getPerkTime() <= 0) return PerksResult.EXPIRED;
 
         // Get LuckPerms User
         UserManager userManager = newPlayerPerks.getLuckPermsAPI().getUserManager();
@@ -125,8 +123,6 @@ public class PerksManager {
         NodeMap userData = user.data();
 
         setPerks(settings, userManager, player, user, userData);
-
-        playerDataManager.addToActivePerksMap(uuid);
 
         return PerksResult.SUCCESS;
     }
@@ -149,7 +145,7 @@ public class PerksManager {
             PlayerData playerData = playerDataManager.getPlayerData(uuid);
             if(playerData == null) return PerksResult.NO_PLAYER_DATA;
             // Check if perks can be applied
-            if(System.currentTimeMillis() > (playerData.getJoinTime() + settingsManager.getPeriod())) return PerksResult.EXPIRED;
+            if(playerData.getPerkTime() <= 0) return PerksResult.EXPIRED;
         }
 
         // Get LuckPerms User
@@ -160,25 +156,24 @@ public class PerksManager {
 
         unsetPerks(settings, userManager, player, user, userData);
 
-        playerDataManager.removeFromActivePerksMap(uuid);
-
         return PerksResult.SUCCESS;
     }
 
     /**
-     * Add perks to the player by modifying their join time and then enabling perks.
+     * Add perks to the player by modifying their perk time and then enabling perks.
      * Use {@link #enablePerks(Player, UUID)} to enable perks based on the player's current join time.
      * @param player The {@link Player}.
      * @param uuid The {@link UUID} of the player.
+     * @param duration The duration in seconds to apply the perks for.
      * @return A {@link PerksResult}.
      */
-    public @NotNull PerksResult applyPerks(@NotNull Player player, @NotNull UUID uuid) {
+    public @NotNull PerksResult applyPerks(@NotNull Player player, @NotNull UUID uuid, long duration) {
         // Get PlayerData
         PlayerData playerData = playerDataManager.getPlayerData(uuid);
         if(playerData == null) return PerksResult.NO_PLAYER_DATA;
 
-        // Set join time to the current system time
-        playerData.setJoinTime(System.currentTimeMillis());
+        // Set perk time
+        playerData.setPerkTime(duration);
 
         playerDataManager.savePlayerData(uuid, playerData);
 
@@ -197,8 +192,8 @@ public class PerksManager {
         PlayerData playerData = playerDataManager.getPlayerData(uuid);
         if(playerData == null) return PerksResult.NO_PLAYER_DATA;
 
-        // Set join time to the current system time
-        playerData.setJoinTime(0);
+        // Set perk time
+        playerData.setPerkTime(0);
 
         playerDataManager.savePlayerData(uuid, playerData);
 
@@ -224,8 +219,7 @@ public class PerksManager {
                 switch(perksResult) {
                     case SUCCESS -> {
                         List<TagResolver.Single> placeholders = List.of(
-                                Placeholder.parsed("expire_time", TimeUtil.millisToTimeStamp((playerData.getJoinTime() + settingsManager.getPeriod()), ZoneId.of("America/New_York"), "MM-dd-yyyy HH:mm:ss z")),
-                                Placeholder.parsed("remaining_time", localeManager.getTimeMessage((playerData.getJoinTime() + settingsManager.getPeriod()) - System.currentTimeMillis())));
+                                Placeholder.parsed("remaining_time", localeManager.getTimeMessage(playerData.getPerkTime())));
 
                         for(String msg : localeManager.getLocale().perksEnabledMessages()) {
                             player.sendMessage(AdventureUtil.deserialize(player, localeManager.getLocale().prefix() + msg, placeholders));
@@ -253,11 +247,11 @@ public class PerksManager {
         Locale locale = localeManager.getLocale();
         Server server = newPlayerPerks.getServer();
 
-        playerDataManager.getActivePerksMap()
-            .forEach((uuid, playerData) -> {
-                Player player = server.getPlayer(uuid);
+        playerDataManager.getActivePerksPlayerData()
+            .forEach(playerData -> {
+                Player player = server.getPlayer(playerData.getPlayerId());
                 if(player != null && player.isOnline() && player.isConnected()) {
-                    disablePerks(player, uuid, false);
+                    disablePerks(player, playerData.getPlayerId(), false);
 
                     if(onReload) player.sendMessage(locale.prefix() + locale.disablePerksReload());
                 }

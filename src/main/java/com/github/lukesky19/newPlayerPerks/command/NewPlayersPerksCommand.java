@@ -19,10 +19,10 @@ package com.github.lukesky19.newPlayerPerks.command;
 
 import com.github.lukesky19.newPlayerPerks.NewPlayerPerks;
 import com.github.lukesky19.newPlayerPerks.command.arguments.*;
+import com.github.lukesky19.newPlayerPerks.locale.LocaleManager;
 import com.github.lukesky19.newPlayerPerks.manager.PerksManager;
 import com.github.lukesky19.newPlayerPerks.manager.PlayerDataManager;
-import com.github.lukesky19.newPlayerPerks.manager.config.LocaleManager;
-import com.github.lukesky19.newPlayerPerks.manager.config.SettingsManager;
+import com.github.lukesky19.newPlayerPerks.settings.SettingsManager;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -68,19 +68,13 @@ public class NewPlayersPerksCommand {
         LiteralArgumentBuilder<CommandSourceStack> builder = Commands.literal("newplayerperks")
                 .requires(ctx -> ctx.getSender().hasPermission("newplayerperks.commands.newplayerperks"));
 
-        ReloadCommand reloadCommand = new ReloadCommand(newPlayerPerks, localeManager);
-        AddCommand addCommand = new AddCommand(newPlayerPerks, localeManager, perksManager);
-        RemoveCommand removeCommand = new RemoveCommand(newPlayerPerks, localeManager, perksManager);
-        EnableCommand enableCommand = new EnableCommand(newPlayerPerks, settingsManager, localeManager, playerDataManager, perksManager);
-        DisableCommand disableCommand = new DisableCommand(newPlayerPerks, settingsManager, localeManager, playerDataManager, perksManager);
-        HelpCommand helpCommand = new HelpCommand(newPlayerPerks, localeManager);
-
-        builder.then(reloadCommand.createCommand());
-        builder.then(addCommand.createCommand());
-        builder.then(removeCommand.createCommand());
-        builder.then(enableCommand.createCommand());
-        builder.then(disableCommand.createCommand());
-        builder.then(helpCommand.createCommand());
+        builder.then(new ReloadCommand(newPlayerPerks, localeManager).createCommand());
+        builder.then(new AddCommand(newPlayerPerks, localeManager, perksManager).createCommand());
+        builder.then(new RemoveCommand(newPlayerPerks, localeManager, perksManager).createCommand());
+        builder.then(new EnableCommand(newPlayerPerks, settingsManager, localeManager, playerDataManager, perksManager).createCommand());
+        builder.then(new DisableCommand(newPlayerPerks, settingsManager, localeManager, playerDataManager, perksManager).createCommand());
+        builder.then(new HelpCommand(newPlayerPerks, localeManager).createCommand());
+        builder.then(new TimeCommand(newPlayerPerks, localeManager, playerDataManager).createCommand());
 
         return builder.build();
     }

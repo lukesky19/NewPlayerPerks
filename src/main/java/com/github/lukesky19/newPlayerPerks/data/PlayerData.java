@@ -18,26 +18,85 @@
 package com.github.lukesky19.newPlayerPerks.data;
 
 import com.github.lukesky19.skylib.libs.configurate.objectmapping.ConfigSerializable;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.UUID;
 
 /**
  * Contains the player's join time.
  */
 @ConfigSerializable
 public class PlayerData {
+    private final @NotNull UUID playerId;
+    private long perkTime = 0;
     private long joinTime = 0;
+    private boolean perksPaused = false;
 
     /**
      * Constructor
-     * Join time will be set to 0 by default.
+     * @deprecated Use {@link PlayerData#PlayerData(UUID)} or {@link PlayerData#PlayerData(UUID, long, long, boolean)} instead.
+     * @throws RuntimeException if used.
      */
-    public PlayerData() {}
+    @Deprecated(since = "1.3.0.0")
+    public PlayerData() {
+        throw new RuntimeException("The use of the default constructor is not allowed.");
+    }
 
     /**
      * Constructor
+     * @param playerId The {@link UUID} the player data belongs to.
+     */
+    public PlayerData(@NotNull UUID playerId) {
+        this.playerId = playerId;
+    }
+
+    /**
+     * Constructor
+     * @param playerId The {@link UUID} the player data belongs to.
+     * @param perkTime The player's perk time.
      * @param joinTime The player's join time.
+     * @param perksPaused Are perks paused?
      */
-    public PlayerData(long joinTime) {
-        this.joinTime = joinTime;
+    public PlayerData(@NotNull UUID playerId, long perkTime, long joinTime, boolean perksPaused) {
+        this.playerId = playerId;
+        setPerkTime(perkTime);
+        setJoinTime(joinTime);
+        setPerksPaused(perksPaused);
+    }
+
+    /**
+     * Get the {@link UUID} this data belongs to.
+     * @return The {@link UUID}.
+     */
+    public @NotNull UUID getPlayerId() {
+        return playerId;
+    }
+
+    /**
+     * Set the player's perk time.
+     * @param perkTime The perk time to set in seconds.
+     */
+    public void setPerkTime(long perkTime) {
+        this.perkTime = Math.max(0, perkTime);
+    }
+
+    /**
+     * Remove the time from the player's perk time.
+     * @param timeToRemove The time in seconds to remove.
+     */
+    public void removePerkTime(long timeToRemove) {
+        if(this.perkTime <= 0) return;
+        if(timeToRemove <= 0) return;
+
+        this.perkTime = Math.max(0, perkTime - timeToRemove);
+    }
+
+    /**
+     * Get the player's perk time in seconds.
+     * @return The player's remaining time perks should apply for.
+     */
+    public long getPerkTime() {
+        return perkTime;
     }
 
     /**
@@ -54,5 +113,21 @@ public class PlayerData {
      */
     public long getJoinTime() {
         return joinTime;
+    }
+
+    /**
+     * Set whether perk time is paused or not.
+     * @param perksPaused Should perk time paused or not?
+     */
+    public void setPerksPaused(boolean perksPaused) {
+        this.perksPaused = perksPaused;
+    }
+
+    /**
+     * Is perk time paused?
+     * @return true if paused, false if not.
+     */
+    public boolean isPerksPaused() {
+        return perksPaused;
     }
 }

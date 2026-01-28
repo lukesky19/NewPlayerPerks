@@ -15,9 +15,12 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package com.github.lukesky19.newPlayerPerks.manager.database;
+package com.github.lukesky19.newPlayerPerks.database;
 
-import com.github.lukesky19.newPlayerPerks.manager.database.tables.PlayerDataTable;
+import com.github.lukesky19.newPlayerPerks.NewPlayerPerks;
+import com.github.lukesky19.newPlayerPerks.database.tables.PlayerDataTable;
+import com.github.lukesky19.newPlayerPerks.database.tables.VersionsTable;
+import com.github.lukesky19.newPlayerPerks.settings.SettingsManager;
 import com.github.lukesky19.skylib.api.database.AbstractDatabaseManager;
 import org.jetbrains.annotations.NotNull;
 
@@ -29,13 +32,22 @@ public class DatabaseManager extends AbstractDatabaseManager {
 
     /**
      * Constructor
+     * @param newPlayerPerks A {@link NewPlayerPerks} instance.
      * @param connectionManager Α {@link ConnectionManager} instance.
      * @param queueManager A {@link QueueManager} instance.
+     * @param settingsManager A {@link SettingsManager} instance.
      */
-    public DatabaseManager(@NotNull ConnectionManager connectionManager, @NotNull QueueManager queueManager) {
+    public DatabaseManager(
+            @NotNull NewPlayerPerks newPlayerPerks,
+            @NotNull ConnectionManager connectionManager,
+            @NotNull QueueManager queueManager,
+            @NotNull SettingsManager settingsManager) {
         super(connectionManager, queueManager);
 
-        playerDataTable = new PlayerDataTable(queueManager);
+        VersionsTable versionsTable = new VersionsTable(queueManager);
+        versionsTable.createTable();
+
+        playerDataTable = new PlayerDataTable(newPlayerPerks, queueManager, versionsTable, settingsManager);
         playerDataTable.createTable();
     }
 

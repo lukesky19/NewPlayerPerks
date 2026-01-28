@@ -15,7 +15,7 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package com.github.lukesky19.newPlayerPerks.data;
+package com.github.lukesky19.newPlayerPerks.locale;
 
 import com.github.lukesky19.skylib.libs.configurate.objectmapping.ConfigSerializable;
 import org.jetbrains.annotations.NotNull;
@@ -35,6 +35,8 @@ import java.util.List;
  * @param userError The message sent when a request fails due to no LuckPerms' User found.
  * @param settingsError The message sent when a request fails due to a settings error.
  * @param expiredError The message sent when a request fails due to perks being expired.
+ * @param perkTime The message sent to the player viewing their perk time.
+ * @param playerPerkTime The message sent to the player viewing another player's perk time.
  * @param enablePerksExpired The message sent when a player tries to enable their perks that have already expired.
  * @param disablePerksExpired The message sent when a player tries to disable their perks that have already expired.
  * @param disablePerksReload The message sent when a player has their perks disabled due to a plugin reload.
@@ -57,6 +59,8 @@ public record Locale(
         String userError,
         String settingsError,
         String expiredError,
+        String perkTime,
+        String playerPerkTime,
         String enablePerksExpired,
         String disablePerksExpired,
         String disablePerksReload,

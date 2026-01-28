@@ -15,7 +15,7 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package com.github.lukesky19.newPlayerPerks.manager.database;
+package com.github.lukesky19.newPlayerPerks.database;
 
 import com.github.lukesky19.skylib.api.database.queue.MultiThreadQueueManager;
 import org.jetbrains.annotations.NotNull;

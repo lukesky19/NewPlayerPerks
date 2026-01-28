@@ -18,11 +18,12 @@
 package com.github.lukesky19.newPlayerPerks.command.arguments;
 
 import com.github.lukesky19.newPlayerPerks.NewPlayerPerks;
-import com.github.lukesky19.newPlayerPerks.data.Locale;
+import com.github.lukesky19.newPlayerPerks.locale.Locale;
+import com.github.lukesky19.newPlayerPerks.locale.LocaleManager;
 import com.github.lukesky19.newPlayerPerks.manager.PerksManager;
-import com.github.lukesky19.newPlayerPerks.manager.config.LocaleManager;
 import com.github.lukesky19.newPlayerPerks.util.PerksResult;
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
+import com.mojang.brigadier.arguments.LongArgumentType;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -69,63 +70,68 @@ public class AddCommand {
         return Commands.literal("add")
             .requires(ctx -> ctx.getSender().hasPermission("newplayerperks.commands.newplayerperks.add"))
             .then(Commands.argument("player", ArgumentTypes.player())
-                .executes(ctx -> {
-                    Locale locale = localeManager.getLocale();
-                    CommandSender sender = ctx.getSource().getSender();
-                    PlayerSelectorArgumentResolver targetResolver = ctx.getArgument("player", PlayerSelectorArgumentResolver.class);
-                    Player targetPlayer = targetResolver.resolve(ctx.getSource()).getFirst();
-                    UUID targetPlayerId = targetPlayer.getUniqueId();
+                .then(Commands.argument("duration", LongArgumentType.longArg(1))
+                    .executes(ctx -> {
+                        Locale locale = localeManager.getLocale();
+                        CommandSender sender = ctx.getSource().getSender();
+                        PlayerSelectorArgumentResolver targetResolver = ctx.getArgument("player", PlayerSelectorArgumentResolver.class);
+                        Player targetPlayer = targetResolver.resolve(ctx.getSource()).getFirst();
+                        UUID targetPlayerId = targetPlayer.getUniqueId();
+                        long duration = ctx.getArgument("duration", long.class);
 
-                    List<TagResolver.Single> placeholders = List.of(Placeholder.parsed("player_name", targetPlayer.getName()));
+                        List<TagResolver.Single> placeholders = List.of(
+                                Placeholder.parsed("player_name", targetPlayer.getName()),
+                                Placeholder.parsed("time", localeManager.getTimeMessage(duration)));
 
-                    PerksResult perksResult = perksManager.applyPerks(targetPlayer, targetPlayerId);
-                    switch(perksResult) {
-                        case SUCCESS -> {
-                            if(sender instanceof Player) {
-                                sender.sendMessage(AdventureUtil.deserialize(targetPlayer, locale.prefix() + locale.addedPerks(), placeholders));
-                            } else {
-                                logger.info(AdventureUtil.deserialize(targetPlayer, locale.addedPerks(), placeholders));
+                        PerksResult perksResult = perksManager.applyPerks(targetPlayer, targetPlayerId, duration);
+                        switch(perksResult) {
+                            case SUCCESS -> {
+                                if(sender instanceof Player) {
+                                    sender.sendMessage(AdventureUtil.deserialize(targetPlayer, locale.prefix() + locale.addedPerks(), placeholders));
+                                } else {
+                                    logger.info(AdventureUtil.deserialize(targetPlayer, locale.addedPerks(), placeholders));
+                                }
+
+                                for(String msg : locale.perksAddedMessages()) {
+                                    targetPlayer.sendMessage(AdventureUtil.deserialize(locale.prefix() + msg, placeholders));
+                                }
                             }
 
-                            for(String msg : locale.perksAddedMessages()) {
-                                targetPlayer.sendMessage(AdventureUtil.deserialize(locale.prefix() + msg));
+                            case EXPIRED -> {
+                                if(sender instanceof Player) {
+                                    sender.sendMessage(AdventureUtil.deserialize(targetPlayer, locale.prefix() + locale.expiredError()));
+                                } else {
+                                    logger.info(AdventureUtil.deserialize(targetPlayer, locale.expiredError()));
+                                }
+                            }
+
+                            case SETTINGS_ERROR -> {
+                                if(sender instanceof Player) {
+                                    sender.sendMessage(AdventureUtil.deserialize(targetPlayer, locale.prefix() + locale.settingsError()));
+                                } else {
+                                    logger.info(AdventureUtil.deserialize(targetPlayer, locale.settingsError()));
+                                }
+                            }
+
+                            case NO_PLAYER_DATA -> {
+                                if(sender instanceof Player) {
+                                    sender.sendMessage(AdventureUtil.deserialize(targetPlayer, locale.prefix() + locale.playerDataError()));
+                                } else {
+                                    logger.info(AdventureUtil.deserialize(targetPlayer, locale.playerDataError()));
+                                }
+                            }
+
+                            case USER_ERROR -> {
+                                if(sender instanceof Player) {
+                                    sender.sendMessage(AdventureUtil.deserialize(targetPlayer, locale.prefix() + locale.userError()));
+                                } else {
+                                    logger.info(AdventureUtil.deserialize(targetPlayer, locale.userError()));
+                                }
                             }
                         }
 
-                        case EXPIRED -> {
-                            if(sender instanceof Player) {
-                                sender.sendMessage(AdventureUtil.deserialize(targetPlayer, locale.prefix() + locale.expiredError()));
-                            } else {
-                                logger.info(AdventureUtil.deserialize(targetPlayer, locale.expiredError()));
-                            }
-                        }
-
-                        case SETTINGS_ERROR -> {
-                            if(sender instanceof Player) {
-                                sender.sendMessage(AdventureUtil.deserialize(targetPlayer, locale.prefix() + locale.settingsError()));
-                            } else {
-                                logger.info(AdventureUtil.deserialize(targetPlayer, locale.settingsError()));
-                            }
-                        }
-
-                        case NO_PLAYER_DATA -> {
-                            if(sender instanceof Player) {
-                                sender.sendMessage(AdventureUtil.deserialize(targetPlayer, locale.prefix() + locale.playerDataError()));
-                            } else {
-                                logger.info(AdventureUtil.deserialize(targetPlayer, locale.playerDataError()));
-                            }
-                        }
-
-                        case USER_ERROR -> {
-                            if(sender instanceof Player) {
-                                sender.sendMessage(AdventureUtil.deserialize(targetPlayer, locale.prefix() + locale.userError()));
-                            } else {
-                                logger.info(AdventureUtil.deserialize(targetPlayer, locale.userError()));
-                            }
-                        }
-                    }
-
-                    return 1;
-                })).build();
+                        return 1;
+                    }))
+                ).build();
     }
 }

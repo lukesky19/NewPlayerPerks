@@ -15,10 +15,9 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package com.github.lukesky19.newPlayerPerks.manager.config;
+package com.github.lukesky19.newPlayerPerks.settings;
 
 import com.github.lukesky19.newPlayerPerks.NewPlayerPerks;
-import com.github.lukesky19.newPlayerPerks.data.Settings;
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
 import com.github.lukesky19.skylib.api.configurate.ConfigurationUtility;
 import com.github.lukesky19.skylib.api.time.TimeUtil;
@@ -58,8 +57,8 @@ public class SettingsManager {
     }
 
     /**
-     * Get the number of milliseconds that new player perks should last for.
-     * @return The number of milliseconds or null.
+     * Get the number of seconds that new player perks should last for.
+     * @return The number of seconds or null.
      */
     public @Nullable Long getPeriod() {
         return period;
@@ -90,6 +89,7 @@ public class SettingsManager {
         if(settings.period() == null) return;
 
         period = TimeUtil.stringToMillis(settings.period());
+        period = Math.max(0, period / 1000);
     }
 
     /**

@@ -17,11 +17,13 @@
 */
 package com.github.lukesky19.newPlayerPerks;
 
-import com.github.lukesky19.newPlayerPerks.data.Settings;
+import com.github.lukesky19.newPlayerPerks.data.PlayerData;
 import com.github.lukesky19.newPlayerPerks.manager.PerksManager;
 import com.github.lukesky19.newPlayerPerks.manager.PlayerDataManager;
-import com.github.lukesky19.newPlayerPerks.manager.config.SettingsManager;
+import com.github.lukesky19.newPlayerPerks.settings.Settings;
+import com.github.lukesky19.newPlayerPerks.settings.SettingsManager;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
@@ -63,7 +65,10 @@ public class NewPlayerPerksAPI {
      * @return true if enabled, otherwise false.
      */
     public boolean hasPerksEnabled(@NotNull UUID uuid) {
-        return playerDataManager.getActivePerksMap().containsKey(uuid);
+        @Nullable PlayerData playerData = playerDataManager.getPlayerData(uuid);
+        if(playerData == null) return false;
+
+        return playerData.getPerkTime() > 0 && !playerData.isPerksPaused();
     }
 
     /**
@@ -112,6 +117,18 @@ public class NewPlayerPerksAPI {
         if(settings == null) return false;
 
         return settings.islandFly();
+    }
+
+    /**
+     * Is giving the skyflight fly permission an enabled perk in the plugin's settings?
+     * If the plugin's settings are invalid, this will always return false.
+     * @return true if enabled, otherwise false.
+     */
+    public boolean isSkyFlightPerkEnabled() {
+        Settings settings = settingsManager.getSettings();
+        if(settings == null) return false;
+
+        return settings.skyflight();
     }
 
     /**

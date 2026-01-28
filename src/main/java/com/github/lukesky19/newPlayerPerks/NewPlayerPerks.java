@@ -18,18 +18,18 @@
 package com.github.lukesky19.newPlayerPerks;
 
 import com.github.lukesky19.newPlayerPerks.command.NewPlayersPerksCommand;
+import com.github.lukesky19.newPlayerPerks.database.ConnectionManager;
+import com.github.lukesky19.newPlayerPerks.database.DatabaseManager;
+import com.github.lukesky19.newPlayerPerks.database.QueueManager;
 import com.github.lukesky19.newPlayerPerks.listener.DamageListener;
 import com.github.lukesky19.newPlayerPerks.listener.DeathListener;
 import com.github.lukesky19.newPlayerPerks.listener.JoinListener;
 import com.github.lukesky19.newPlayerPerks.listener.QuitListener;
+import com.github.lukesky19.newPlayerPerks.locale.LocaleManager;
 import com.github.lukesky19.newPlayerPerks.manager.PerksManager;
 import com.github.lukesky19.newPlayerPerks.manager.PlayerDataManager;
-import com.github.lukesky19.newPlayerPerks.manager.TaskManager;
-import com.github.lukesky19.newPlayerPerks.manager.config.LocaleManager;
-import com.github.lukesky19.newPlayerPerks.manager.config.SettingsManager;
-import com.github.lukesky19.newPlayerPerks.manager.database.ConnectionManager;
-import com.github.lukesky19.newPlayerPerks.manager.database.DatabaseManager;
-import com.github.lukesky19.newPlayerPerks.manager.database.QueueManager;
+import com.github.lukesky19.newPlayerPerks.settings.SettingsManager;
+import com.github.lukesky19.newPlayerPerks.task.TaskManager;
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.luckperms.api.LuckPerms;
@@ -77,17 +77,18 @@ public final class NewPlayerPerks extends JavaPlugin {
         if(!setupLuckPermsAPI()) return;
 
         settingsManager = new SettingsManager(this);
+        settingsManager.reload();
         localeManager = new LocaleManager(this, settingsManager);
 
         ConnectionManager connectionManager = new ConnectionManager(this);
         QueueManager queueManager = new QueueManager(connectionManager);
-        databaseManager = new DatabaseManager(connectionManager, queueManager);
+        databaseManager = new DatabaseManager(this, connectionManager, queueManager, settingsManager);
 
         playerDataManager = new PlayerDataManager(this, databaseManager);
         perksManager = new PerksManager(this, settingsManager, localeManager, playerDataManager);
-        taskManager = new TaskManager(this, settingsManager, playerDataManager, perksManager);
+        taskManager = new TaskManager(this, localeManager, playerDataManager, perksManager);
 
-        taskManager.startCheckPerksTask();
+        taskManager.startPerkTimeTask();
 
         this.getServer().getPluginManager().registerEvents(new JoinListener(this, settingsManager, localeManager, playerDataManager, perksManager), this);
         this.getServer().getPluginManager().registerEvents(new QuitListener(playerDataManager, perksManager), this);
@@ -114,7 +115,7 @@ public final class NewPlayerPerks extends JavaPlugin {
      */
     @Override
     public void onDisable() {
-        if(taskManager != null) taskManager.stopCheckPerksTask();
+        if(taskManager != null) taskManager.stopPerkTimeTask();
 
         if(perksManager != null) perksManager.disableAllPerks(false);
 

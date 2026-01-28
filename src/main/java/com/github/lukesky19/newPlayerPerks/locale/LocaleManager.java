@@ -15,11 +15,11 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package com.github.lukesky19.newPlayerPerks.manager.config;
+package com.github.lukesky19.newPlayerPerks.locale;
 
 import com.github.lukesky19.newPlayerPerks.NewPlayerPerks;
-import com.github.lukesky19.newPlayerPerks.data.Locale;
-import com.github.lukesky19.newPlayerPerks.data.Settings;
+import com.github.lukesky19.newPlayerPerks.settings.Settings;
+import com.github.lukesky19.newPlayerPerks.settings.SettingsManager;
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
 import com.github.lukesky19.skylib.api.configurate.ConfigurationUtility;
 import com.github.lukesky19.skylib.api.time.Time;
@@ -45,7 +45,7 @@ public class LocaleManager {
     private final @NotNull NewPlayerPerks newPlayerPerks;
     private final @NotNull SettingsManager settingsManager;
     private final @NotNull Locale DEFAULT_LOCALE = new Locale(
-            "1.1.0.0",
+            "1.2.0.0",
             "<aqua><bold>NewPlayerPerks</bold></aqua><gray> ▪ </gray>",
             List.of(
                     "<aqua>NewPlayerPerks is developed by <white><bold>lukeskywlker19</bold></white>.</aqua>",
@@ -54,10 +54,11 @@ public class LocaleManager {
                     "<green><bold>List of Commands:</bold></green>",
                     "<white>/</white><aqua>newplayerperks</aqua> <yellow>help</yellow>",
                     "<white>/</white><aqua>newplayerperks</aqua> <yellow>enable</yellow>",
-                    "<white>/</white><aqua>skyprestige</aqua> <yellow>disable</yellow>",
-                    "<white>/</white><aqua>skyprestige</aqua> <yellow>reload</yellow>",
-                    "<white>/</white><aqua>skyprestige</aqua> <yellow>add <player_name></yellow>",
-                    "<white>/</white><aqua>skyprestige</aqua> <yellow>remove <player_name></yellow>"),
+                    "<white>/</white><aqua>newplayerperks</aqua> <yellow>disable</yellow>",
+                    "<white>/</white><aqua>newplayerperks</aqua> <yellow>time [player]</yellow>",
+                    "<white>/</white><aqua>newplayerperks</aqua> <yellow>reload</yellow>",
+                    "<white>/</white><aqua>newplayerperks</aqua> <yellow>add <player_name> <duration></yellow>",
+                    "<white>/</white><aqua>newplayerperks</aqua> <yellow>remove <player_name></yellow>"),
             "<green>Configuration files have been reloaded.</green>",
             "<green>Perks have been successfully added to this player.</green>",
             "<green>Perks have been successfully removed from this player.</green>",
@@ -65,19 +66,18 @@ public class LocaleManager {
             "<red>Unable to process your request due to no LuckPerms' User found.</red>",
             "<red>Unable to process your request due to invalid plugin settings.</red>",
             "<red>Unable to process your request due to your perks having already expired.</red>",
+            "<green>You have <time> remaining for your perks.</green>",
+            "<green>Player <player_name> has <time> remaining for their perks.</green>",
             "<red>Unable to enable perks because they have already expired.</red>",
             "<red>Unable to disable perks because they have already expired.</red>",
             "<red>Your perks have been disabled due to a plugin reload. They will be re-enabled after the reload is complete.</red>",
             List.of(
                     "<green>For the next 6 hours, you are now invulnerable, have keep inventory, and will be teleported to your island if you fall into the void.</green>",
                     "<green>Use this time to get a jump start on your island and get to know the server.</green>"),
-            List.of(
-                    "<green>Your perks have been enabled. Your perks will expire at <expire_time>. Remaining time: <remaining_time></green>"),
+            List.of("<green>Your perks have been enabled. Remaining time: <remaining_time></green>"),
             List.of(
                     "<red>Your perks have been removed. You are no longer invulnerable, don't have keep inventory, and won't be teleported to your island if you fall into the void.</red>"),
-            List.of(
-                    "<green>Your perks have been disabled. You can re-enable them using /perks enable as long as they haven't expired.</green>",
-                    "<green>Your perks will expire at <expire_time>. Remaining time: <remaining_time></green>"),
+            List.of("<green>Your perks have been disabled. You can re-enable them using /perks enable.</green> Remaining time: <remaining_time></green>"),
             List.of(
                     "<red>Your invulnerability, keep inventory, void teleport perks have expired!</red>",
                     "<red>You can now take damage, die, and you won't be teleported to your island if you fall into the void!</red>"),
@@ -189,14 +189,14 @@ public class LocaleManager {
         ComponentLogger logger = newPlayerPerks.getComponentLogger();
 
         switch(locale.configVersion()) {
-            case "1.1.0.0" -> {
+            case "1.2.0.0" -> {
                 // Current version, do nothing
             }
 
-            // 1.0.0.0
-            case null -> {
+            // 1.1.0.0 -> 1.2.0.0
+            case "1.1.0.0" -> {
                 locale = new Locale(
-                        "1.1.0.0",
+                        "1.2.0.0",
                         locale.prefix(),
                         List.of(
                                 "<aqua>NewPlayerPerks is developed by <white><bold>lukeskywlker19</bold></white>.</aqua>",
@@ -205,10 +205,52 @@ public class LocaleManager {
                                 "<green><bold>List of Commands:</bold></green>",
                                 "<white>/</white><aqua>newplayerperks</aqua> <yellow>help</yellow>",
                                 "<white>/</white><aqua>newplayerperks</aqua> <yellow>enable</yellow>",
-                                "<white>/</white><aqua>skyprestige</aqua> <yellow>disable</yellow>",
-                                "<white>/</white><aqua>skyprestige</aqua> <yellow>reload</yellow>",
-                                "<white>/</white><aqua>skyprestige</aqua> <yellow>add <player_name></yellow>",
-                                "<white>/</white><aqua>skyprestige</aqua> <yellow>remove <player_name></yellow>"),
+                                "<white>/</white><aqua>newplayerperks</aqua> <yellow>disable</yellow>",
+                                "<white>/</white><aqua>newplayerperks</aqua> <yellow>time [player]</yellow>",
+                                "<white>/</white><aqua>newplayerperks</aqua> <yellow>reload</yellow>",
+                                "<white>/</white><aqua>newplayerperks</aqua> <yellow>add <player_name> <duration></yellow>",
+                                "<white>/</white><aqua>newplayerperks</aqua> <yellow>remove <player_name></yellow>"),
+                        locale.reload(),
+                        locale.addedPerks(),
+                        locale.removedPerks(),
+                        locale.playerDataError(),
+                        locale.userError(),
+                        locale.settingsError(),
+                        locale.expiredError(),
+                        "<green>You have <time> remaining for your perks.</green>",
+                        "<green>Player <player_name> has <time> remaining for their perks.</green>",
+                        locale.enablePerksExpired(),
+                        locale.disablePerksExpired(),
+                        locale.disablePerksReload(),
+                        List.of(
+                                "<green>For the next <time>, you are now invulnerable, have keep inventory, and will be teleported to your island if you fall into the void.</green>",
+                                "<green>Use this time to get a jump start on your island and get to know the server.</green>"),
+                        List.of("<green>Your perks have been enabled. Remaining time: <remaining_time></green>"),
+                        locale.perksRemovedMessages(),
+                        List.of("<green>Your perks have been disabled. You can re-enable them using /perks enable.</green> Remaining time: <remaining_time></green>"),
+                        locale.perksExpiredMessages(),
+                        locale.timeMessage());
+
+                saveLocale();
+            }
+
+            // 1.0.0.0 -> 1.2.0.0
+            case null -> {
+                locale = new Locale(
+                        "1.2.0.0",
+                        locale.prefix(),
+                        List.of(
+                                "<aqua>NewPlayerPerks is developed by <white><bold>lukeskywlker19</bold></white>.</aqua>",
+                                "<aqua>Source code is released on GitHub: <click:OPEN_URL:https://github.com/lukesky19><yellow><underlined><bold>https://github.com/lukesky19</bold></underlined></yellow></click></aqua>",
+                                " ",
+                                "<green><bold>List of Commands:</bold></green>",
+                                "<white>/</white><aqua>newplayerperks</aqua> <yellow>help</yellow>",
+                                "<white>/</white><aqua>newplayerperks</aqua> <yellow>enable</yellow>",
+                                "<white>/</white><aqua>newplayerperks</aqua> <yellow>disable</yellow>",
+                                "<white>/</white><aqua>newplayerperks</aqua> <yellow>time [player]</yellow>",
+                                "<white>/</white><aqua>newplayerperks</aqua> <yellow>reload</yellow>",
+                                "<white>/</white><aqua>newplayerperks</aqua> <yellow>add <player_name> <duration></yellow>",
+                                "<white>/</white><aqua>newplayerperks</aqua> <yellow>remove <player_name></yellow>"),
                         locale.reload(),
                         "<green>Perks have been successfully added to player <player_name></green>",
                         "<green>Perks have been successfully removed from player <player_name>.</green>",
@@ -216,19 +258,18 @@ public class LocaleManager {
                         "<red>Unable to process your request due to no LuckPerms' User found.</red>",
                         "<red>Unable to process your request due to invalid plugin settings.</red>",
                         "<red>Unable to process your request due to your perks having already expired.</red>",
+                        "<green>You have <time> remaining for your perks.</green>",
+                        "<green>Player <player_name> has <time> remaining for their perks.</green>",
                         "<red>Unable to enable perks because they have already expired.</red>",
                         "<red>Unable to disable perks because they have already expired.</red>",
                         "<red>Your perks have been disabled due to a plugin reload. They will be re-enabled after the reload is complete.</red>",
                         List.of(
-                                "<green>For the next 6 hours, you are now invulnerable, have keep inventory, and will be teleported to your island if you fall into the void.</green>",
+                                "<green>For the next <time>, you are now invulnerable, have keep inventory, and will be teleported to your island if you fall into the void.</green>",
                                 "<green>Use this time to get a jump start on your island and get to know the server.</green>"),
-                        List.of(
-                                "<green>Your perks have been enabled. Your perks will expire at <expire_time>. Remaining time: <remaining_time></green>"),
+                        List.of("<green>Your perks have been enabled. Remaining time: <remaining_time></green>"),
                         List.of(
                                 "<red>Your perks have been removed. You are no longer invulnerable, don't have keep inventory, and won't be teleported to your island if you fall into the void.</red>"),
-                        List.of(
-                                "<green>Your perks have been disabled. You can re-enable them using /perks enable as long as they haven't expired.</green>",
-                                "<green>Your perks will expire at <expire_time>. Remaining time: <remaining_time></green>"),
+                        List.of("<green>Your perks have been disabled. You can re-enable them using /perks enable.</green> Remaining time: <remaining_time></green>"),
                         List.of(
                                 "<red>Your invulnerability, keep inventory, void teleport perks have expired!</red>",
                                 "<red>You can now take damage, die, and you won't be teleported to your island if you fall into the void!</red>"),
@@ -262,13 +303,12 @@ public class LocaleManager {
 
     /**
      * Gets the time message to display.
-     * @param timeMilliseconds The time in milliseconds.
+     * @param timeSeconds The time in seconds.
      * @return A String containing the time message.
      */
-    @NotNull
-    public String getTimeMessage(long timeMilliseconds) {
+    public @NotNull String getTimeMessage(long timeSeconds) {
         Locale locale = this.getLocale();
-        Time timeRecord = TimeUtil.millisToTime(timeMilliseconds);
+        Time timeRecord = TimeUtil.millisToTime(timeSeconds * 1000);
 
         List<TagResolver.Single> placeholders = List.of(
                 Placeholder.parsed("years", String.valueOf(timeRecord.years())),

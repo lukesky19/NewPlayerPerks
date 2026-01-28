@@ -17,9 +17,9 @@
 */
 package com.github.lukesky19.newPlayerPerks.listener;
 
-import com.github.lukesky19.newPlayerPerks.data.Settings;
 import com.github.lukesky19.newPlayerPerks.manager.PerksManager;
-import com.github.lukesky19.newPlayerPerks.manager.config.SettingsManager;
+import com.github.lukesky19.newPlayerPerks.settings.Settings;
+import com.github.lukesky19.newPlayerPerks.settings.SettingsManager;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;

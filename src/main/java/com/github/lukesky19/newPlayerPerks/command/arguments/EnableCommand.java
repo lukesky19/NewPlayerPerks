@@ -18,15 +18,14 @@
 package com.github.lukesky19.newPlayerPerks.command.arguments;
 
 import com.github.lukesky19.newPlayerPerks.NewPlayerPerks;
-import com.github.lukesky19.newPlayerPerks.data.Locale;
 import com.github.lukesky19.newPlayerPerks.data.PlayerData;
+import com.github.lukesky19.newPlayerPerks.locale.Locale;
+import com.github.lukesky19.newPlayerPerks.locale.LocaleManager;
 import com.github.lukesky19.newPlayerPerks.manager.PerksManager;
 import com.github.lukesky19.newPlayerPerks.manager.PlayerDataManager;
-import com.github.lukesky19.newPlayerPerks.manager.config.LocaleManager;
-import com.github.lukesky19.newPlayerPerks.manager.config.SettingsManager;
+import com.github.lukesky19.newPlayerPerks.settings.SettingsManager;
 import com.github.lukesky19.newPlayerPerks.util.PerksResult;
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
-import com.github.lukesky19.skylib.api.time.TimeUtil;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -36,7 +35,6 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
 
@@ -96,9 +94,9 @@ public class EnableCommand {
                 PerksResult perksResult = perksManager.enablePerks(player, uuid);
                 switch(perksResult) {
                     case SUCCESS -> {
-                        List<TagResolver.Single> placeholders = List.of(
-                                Placeholder.parsed("expire_time", TimeUtil.millisToTimeStamp((playerData.getJoinTime() + settingsManager.getPeriod()), ZoneId.of("America/New_York"), "MM-dd-yyyy HH:mm:ss z")),
-                                Placeholder.parsed("remaining_time", localeManager.getTimeMessage((playerData.getJoinTime() + settingsManager.getPeriod()) - System.currentTimeMillis())));
+                        playerData.setPerksPaused(false);
+
+                        List<TagResolver.Single> placeholders = List.of(Placeholder.parsed("remaining_time", localeManager.getTimeMessage(playerData.getPerkTime())));
 
                         for(String msg : locale.perksEnabledMessages()) {
                             player.sendMessage(AdventureUtil.deserialize(locale.prefix() + msg, placeholders));

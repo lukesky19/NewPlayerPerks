@@ -19,13 +19,14 @@ package com.github.lukesky19.newPlayerPerks.manager;
 
 import com.github.lukesky19.newPlayerPerks.NewPlayerPerks;
 import com.github.lukesky19.newPlayerPerks.data.PlayerData;
-import com.github.lukesky19.newPlayerPerks.manager.database.DatabaseManager;
-import com.github.lukesky19.newPlayerPerks.manager.database.tables.PlayerDataTable;
+import com.github.lukesky19.newPlayerPerks.database.DatabaseManager;
+import com.github.lukesky19.newPlayerPerks.database.tables.PlayerDataTable;
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
 import com.github.lukesky19.skylib.api.configurate.ConfigurationUtility;
 import com.github.lukesky19.skylib.libs.configurate.ConfigurateException;
 import com.github.lukesky19.skylib.libs.configurate.yaml.YamlConfigurationLoader;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -45,7 +46,6 @@ public class PlayerDataManager {
     private final @NotNull DatabaseManager databaseManager;
 
     private final @NotNull Map<UUID, PlayerData> playerDataMap = new HashMap<>();
-    private final @NotNull Map<UUID, PlayerData> activePerksPlayerDataMap = new HashMap<>();
 
     /**
      * Constructor
@@ -77,31 +77,11 @@ public class PlayerDataManager {
     }
 
     /**
-     * Stores the player's player data in the active perks map.
-     * The active perks map is iterated over to check if their perks have expired to remove them.
-     * @param uuid The {@link UUID} of the player.
+     * Get the {@link List} of {@link PlayerData} that have perk time.
+     * @return The {@link List} of {@link PlayerData} that have perk time and perks not paused.
      */
-    public void addToActivePerksMap(@NotNull UUID uuid) {
-        PlayerData playerData = playerDataMap.get(uuid);
-        if(playerData == null) return;
-
-        activePerksPlayerDataMap.put(uuid, playerData);
-    }
-
-    /**
-     * Remove the player's player data from the active perks map.
-     * @param uuid The {@link UUID} of the player.
-     */
-    public void removeFromActivePerksMap(@NotNull UUID uuid) {
-        activePerksPlayerDataMap.remove(uuid);
-    }
-
-    /**
-     * Get the {@link Map} mapping {@link UUID}s to {@link PlayerData} that have perks enabled.
-     * @return The {@link Map} mapping {@link UUID}s to {@link PlayerData} that have perks enabled.
-     */
-    public @NotNull Map<UUID, PlayerData> getActivePerksMap() {
-        return activePerksPlayerDataMap;
+    public @NotNull List<PlayerData> getActivePerksPlayerData() {
+        return playerDataMap.values().stream().filter(playerData -> !playerData.isPerksPaused() && playerData.getPerkTime() > 0).toList();
     }
 
     /**
@@ -111,7 +91,6 @@ public class PlayerDataManager {
     public @NotNull CompletableFuture<Void> reload() {
         return savePlayerData().thenCompose(v1 -> {
             playerDataMap.clear();
-            activePerksPlayerDataMap.clear();
 
             return migrateLegacyPlayerData().thenCompose(v2 -> loadPlayerData());
         });
@@ -127,7 +106,7 @@ public class PlayerDataManager {
 
         List<CompletableFuture<PlayerData>> futuresList = new ArrayList<>();
         newPlayerPerks.getServer().getOnlinePlayers().forEach(player ->
-                futuresList.add(loadPlayerData(player.getUniqueId())));
+                futuresList.add(loadPlayerData(player, player.getUniqueId())));
 
         return CompletableFuture.allOf(futuresList.toArray(new CompletableFuture[0]));
     }
@@ -135,16 +114,17 @@ public class PlayerDataManager {
     /**
      * Get the {@link PlayerData} from the database. If no data exists, then a new {@link PlayerData} record will be created.
      * If the plugin's settings are invalid, the returned {@link PlayerData} will be null.
+     * @param player The {@link Player}.
      * @param uuid The {@link UUID} of the player.
      * @return A {@link CompletableFuture} containing {@link PlayerData}.
      */
-    public @NotNull CompletableFuture<PlayerData> loadPlayerData(@NotNull UUID uuid) {
+    public @NotNull CompletableFuture<PlayerData> loadPlayerData(@NotNull Player player, @NotNull UUID uuid) {
         ComponentLogger logger = newPlayerPerks.getComponentLogger();
         PlayerDataTable playerDataTable = databaseManager.getPlayerDataTable();
 
-        return playerDataTable.loadPlayerData(uuid).thenApply(playerData -> {
+        return playerDataTable.loadPlayerData(player, uuid).thenApply(playerData -> {
             if(playerData == null) {
-                PlayerData newPlayerData = new PlayerData();
+                PlayerData newPlayerData = new PlayerData(uuid);
 
                 playerDataMap.put(uuid, newPlayerData);
 
@@ -170,8 +150,11 @@ public class PlayerDataManager {
      * @param uuid The {@link UUID} of the player.
      */
     public void unloadPlayerData(@NotNull UUID uuid) {
-        activePerksPlayerDataMap.remove(uuid);
-        playerDataMap.remove(uuid);
+        PlayerData playerData = playerDataMap.get(uuid);
+        if(playerData == null) return;
+
+        PlayerDataTable playerDataTable = databaseManager.getPlayerDataTable();
+        playerDataTable.savePlayerData(uuid, playerData).thenAccept(v -> playerDataMap.remove(uuid));
     }
 
     /**
@@ -183,7 +166,7 @@ public class PlayerDataManager {
         PlayerDataTable playerDataTable = databaseManager.getPlayerDataTable();
         playerDataTable.savePlayerData(uuid, playerData);
 
-        playerDataMap.put(uuid, playerData);
+        playerDataMap.putIfAbsent(uuid, playerData);
     }
 
     /**

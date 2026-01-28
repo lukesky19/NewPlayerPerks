@@ -18,8 +18,8 @@
 package com.github.lukesky19.newPlayerPerks.command.arguments;
 
 import com.github.lukesky19.newPlayerPerks.NewPlayerPerks;
-import com.github.lukesky19.newPlayerPerks.data.Locale;
-import com.github.lukesky19.newPlayerPerks.manager.config.LocaleManager;
+import com.github.lukesky19.newPlayerPerks.locale.Locale;
+import com.github.lukesky19.newPlayerPerks.locale.LocaleManager;
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;

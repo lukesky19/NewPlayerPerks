@@ -19,10 +19,11 @@
 * /newplayerperks - The base command and the command to prestige an island.
     * Aliases: /npp, /perks, /perk
 - /newplayerperks reload - Command to reload the plugin
-- /newplayerperks add <player_name> - Command to apply new player perks to a player.
+- /newplayerperks add <player_name> <duration> - Command to apply new player perks to a player.
 - /newplayerperks remove <player_name> - Command to remove new player perks from a player.
 - /newplayerperks enable - Command for a player to enable their perks.
 - /newplayerperks disable - Command for a player to disable their perks.
+- /newplayerperks time \[player] - Command to view the perk time a player has or your own perk time.
 
 ## Permisisons
 - `newplayerperks.commands.newplayerperks` - The permission to access the /newplayerperks command.
@@ -31,6 +32,8 @@
 - `newplayerperks.commands.newplayerperks.remove` - The permission to access /newplayerperks remove.
 - `newplayerperks.commands.newplayerperks.enable` - The permission to access /newplayerperks enable.
 - `newplayerperks.commands.newplayerperks.disable` - The permission to access /newplayerperks disable.
+- `newplayerperks.commands.newplayerperks.time` - The permission to access /newplayerperks time.
+- `newplayerperks.commands.newplayerperks.time.other` - The permission to access /newplayerperks time \[player].
 - `newplayerperks.commands.newplayerperks.help` - The permission to access /newplayerperks help.
 
 ## Issues, Bugs, or Suggestions

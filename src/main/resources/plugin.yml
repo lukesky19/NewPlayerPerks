@@ -24,6 +24,12 @@ permissions:
     newplayerperks.commands.newplayerperks.disable:
         description: Permission to let a player disable their perks.
         default: op
+    newplayerperks.commands.newplayerperks.time:
+        description: Permission for a player to view their perk time.
+        default: op
+    newplayerperks.commands.newplayerperks.time.other:
+        description: Permission for a player to view another player's perk time.
+        default: op
     newplayerperks.commands.newplayerperks.help:
         description: Permission to view the plugin's help message.
         default: op

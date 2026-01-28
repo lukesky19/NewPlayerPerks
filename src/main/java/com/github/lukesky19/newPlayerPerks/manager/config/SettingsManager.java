@@ -80,7 +80,7 @@ public class SettingsManager {
         try {
             settings = loader.load().get(Settings.class);
         } catch (ConfigurateException e) {
-            logger.error(AdventureUtil.serialize("Unable to load plugin settings due to an error: " + e.getMessage()));
+            logger.error(AdventureUtil.deserialize("Unable to load plugin settings due to an error: " + e.getMessage()));
             return;
         }
 
@@ -99,14 +99,21 @@ public class SettingsManager {
         if(settings == null) return;
 
         switch(settings.configVersion()) {
-            case "1.1.0.0" -> {
+            case "1.1.1.0" -> {
                 // Current version, do nothing
+            }
+
+            case "1.1.0.0" -> {
+                // 1.1.0.0 -> 1.1.1.0
+                settings = new Settings("1.1.1.0", settings.locale(), settings.invulnerable(), null, settings.essentialsFly(), settings.islandFly(), false, settings.keepInventory(), settings.keepExp(), settings.voidTeleport(), settings.period());
+
+                saveSettings();
             }
 
             case null -> {
                 // 1.0.0.0 -> 1.1.0.0
                 boolean flySetting = Objects.requireNonNullElse(settings.fly(), false);
-                settings = new Settings("1.1.0.0", settings.locale(), settings.invulnerable(), null, flySetting, flySetting, settings.keepInventory(), settings.keepExp(), settings.voidTeleport(), settings.period());
+                settings = new Settings("1.1.0.0", settings.locale(), settings.invulnerable(), null, flySetting, flySetting, flySetting, settings.keepInventory(), settings.keepExp(), settings.voidTeleport(), settings.period());
 
                 saveSettings();
             }

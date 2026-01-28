@@ -138,7 +138,7 @@ public class PlayerDataManager {
      * @param uuid The {@link UUID} of the player.
      * @return A {@link CompletableFuture} containing {@link PlayerData}.
      */
-    public @NotNull CompletableFuture<@NotNull PlayerData> loadPlayerData(@NotNull UUID uuid) {
+    public @NotNull CompletableFuture<PlayerData> loadPlayerData(@NotNull UUID uuid) {
         ComponentLogger logger = newPlayerPerks.getComponentLogger();
         PlayerDataTable playerDataTable = databaseManager.getPlayerDataTable();
 
@@ -158,7 +158,7 @@ public class PlayerDataManager {
             return playerData;
         }).exceptionally(throwable -> {
             if(throwable != null) {
-                logger.error(AdventureUtil.serialize("Loading of player data failed: " + throwable.getMessage()));
+                logger.error(AdventureUtil.deserialize("Loading of player data failed: " + throwable.getMessage()));
             }
 
             return null;
@@ -232,14 +232,14 @@ public class PlayerDataManager {
                                 try {
                                     Files.delete(path);
                                 } catch (IOException e) {
-                                    logger.warn(AdventureUtil.serialize("Failed to delete legacy player data for file: " + path.toFile() + ". Error: " + e.getMessage()));
+                                    logger.warn(AdventureUtil.deserialize("Failed to delete legacy player data for file: " + path.toFile() + ". Error: " + e.getMessage()));
                                 }
                             } catch (ConfigurateException e) {
-                                logger.warn(AdventureUtil.serialize("Failed to migrate legacy player data for file: " + path.toFile() + ". Error: " + e.getMessage()));
+                                logger.warn(AdventureUtil.deserialize("Failed to migrate legacy player data for file: " + path.toFile() + ". Error: " + e.getMessage()));
                             }
                         });
             } catch (IOException e) {
-                logger.warn(AdventureUtil.serialize("Failed to migrate legacy player data. Error: " + e.getMessage()));
+                logger.warn(AdventureUtil.deserialize("Failed to migrate legacy player data. Error: " + e.getMessage()));
                 return CompletableFuture.completedFuture(null);
             }
 
@@ -250,13 +250,13 @@ public class PlayerDataManager {
                     Files.delete(playerDataPath);
                 }
             } catch (IOException e) {
-                logger.error(AdventureUtil.serialize(e.getMessage()));
+                logger.error(AdventureUtil.deserialize(e.getMessage()));
                 return CompletableFuture.completedFuture(null);
             }
 
             return CompletableFuture.allOf(futureList.toArray(new CompletableFuture[0]));
         } catch (RuntimeException e) {
-            logger.error(AdventureUtil.serialize(e.getMessage()));
+            logger.error(AdventureUtil.deserialize(e.getMessage()));
             return CompletableFuture.completedFuture(null);
         }
     }

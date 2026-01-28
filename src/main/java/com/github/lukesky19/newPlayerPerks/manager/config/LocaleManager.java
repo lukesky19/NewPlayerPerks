@@ -124,11 +124,11 @@ public class LocaleManager {
 
         Settings settings = settingsManager.getSettings();
         if(settings == null) {
-            logger.error(AdventureUtil.serialize("Unable to load the plugin's locale due to invalid plugin settings. The default locale will be used."));
+            logger.error(AdventureUtil.deserialize("Unable to load the plugin's locale due to invalid plugin settings. The default locale will be used."));
             return;
         }
         if(settings.locale() == null) {
-            logger.error(AdventureUtil.serialize("Unable to load the plugin's locale due to a locale not being configured in settings.yml. The default locale will be used."));
+            logger.error(AdventureUtil.deserialize("Unable to load the plugin's locale due to a locale not being configured in settings.yml. The default locale will be used."));
             return;
         }
 
@@ -144,7 +144,7 @@ public class LocaleManager {
         try {
             locale = loader.load().get(Locale.class);
         } catch (ConfigurateException e) {
-            logger.error(AdventureUtil.serialize("Failed to load the locale configuration. Error: " + e.getMessage()));
+            logger.error(AdventureUtil.deserialize("Failed to load the locale configuration. Error: " + e.getMessage()));
             return;
         }
 
@@ -157,11 +157,11 @@ public class LocaleManager {
 
         Settings settings = settingsManager.getSettings();
         if(settings == null) {
-            logger.error(AdventureUtil.serialize("Unable to save the plugin's locale due to invalid plugin settings. The default locale will be used."));
+            logger.error(AdventureUtil.deserialize("Unable to save the plugin's locale due to invalid plugin settings. The default locale will be used."));
             return;
         }
         if(settings.locale() == null) {
-            logger.error(AdventureUtil.serialize("Unable to save the plugin's locale due to a locale not being configured in settings.yml. The default locale will be used."));
+            logger.error(AdventureUtil.deserialize("Unable to save the plugin's locale due to a locale not being configured in settings.yml. The default locale will be used."));
             return;
         }
 
@@ -180,7 +180,7 @@ public class LocaleManager {
 
             loader.save(node);
         } catch (ConfigurateException e) {
-            logger.error(AdventureUtil.serialize("Failed to save the locale configuration. Error: " + e.getMessage()));
+            logger.error(AdventureUtil.deserialize("Failed to save the locale configuration. Error: " + e.getMessage()));
         }
     }
 
@@ -246,7 +246,7 @@ public class LocaleManager {
                 saveLocale();
             }
 
-            default -> logger.error(AdventureUtil.serialize("Unable to migrate locale configuration due to an unrecognized config version."));
+            default -> logger.error(AdventureUtil.deserialize("Unable to migrate locale configuration due to an unrecognized config version."));
         }
     }
 
@@ -281,7 +281,7 @@ public class LocaleManager {
 
         StringBuilder stringBuilder = getStringBuilder(locale, timeRecord);
 
-        return MiniMessage.miniMessage().serialize(AdventureUtil.serialize(stringBuilder.toString(), placeholders));
+        return MiniMessage.miniMessage().serialize(AdventureUtil.deserialize(stringBuilder.toString(), placeholders));
     }
 
     /**

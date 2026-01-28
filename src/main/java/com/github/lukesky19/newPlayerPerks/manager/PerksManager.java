@@ -24,6 +24,7 @@ import com.github.lukesky19.newPlayerPerks.data.Settings;
 import com.github.lukesky19.newPlayerPerks.manager.config.LocaleManager;
 import com.github.lukesky19.newPlayerPerks.manager.config.SettingsManager;
 import com.github.lukesky19.newPlayerPerks.util.PerksResult;
+import com.github.lukesky19.skyFlight.SkyFlightAPI;
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
 import com.github.lukesky19.skylib.api.time.TimeUtil;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
@@ -35,7 +36,10 @@ import net.luckperms.api.model.user.UserManager;
 import net.luckperms.api.node.types.PermissionNode;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.time.ZoneId;
 import java.util.List;
@@ -50,6 +54,7 @@ public class PerksManager {
     private final @NotNull SettingsManager settingsManager;
     private final @NotNull LocaleManager localeManager;
     private final @NotNull PlayerDataManager playerDataManager;
+    private @Nullable SkyFlightAPI skyFlightAPI;
 
     /**
      * Constructor
@@ -68,6 +73,14 @@ public class PerksManager {
         this.settingsManager = settingsManager;
         this.localeManager = localeManager;
         this.playerDataManager = playerDataManager;
+
+        Plugin skyFlight = newPlayerPerks.getServer().getPluginManager().getPlugin("SkyFlight");
+        if(skyFlight != null && skyFlight.isEnabled()) {
+            @Nullable RegisteredServiceProvider<SkyFlightAPI> rsp = newPlayerPerks.getServer().getServicesManager().getRegistration(SkyFlightAPI.class);
+            if(rsp != null) {
+                skyFlightAPI = rsp.getProvider();
+            }
+        }
     }
 
     /**
@@ -77,7 +90,7 @@ public class PerksManager {
      */
     public boolean doesPlayerHavePerks(@NotNull UUID uuid) {
         if(settingsManager.getPeriod() == null) {
-            logger.error(AdventureUtil.serialize("Unable to check if player has perks due to an invalid period in settings.yml."));
+            logger.error(AdventureUtil.deserialize("Unable to check if player has perks due to an invalid period in settings.yml."));
             return false;
         }
 
@@ -197,7 +210,7 @@ public class PerksManager {
      */
     public void enableAllPerks() {
         if(settingsManager.getPeriod() == null) {
-            logger.error(AdventureUtil.serialize("Unable to check if perks should be applied due to an invalid period in settings.yml."));
+            logger.error(AdventureUtil.deserialize("Unable to check if perks should be applied due to an invalid period in settings.yml."));
             return;
         }
 
@@ -215,15 +228,15 @@ public class PerksManager {
                                 Placeholder.parsed("remaining_time", localeManager.getTimeMessage((playerData.getJoinTime() + settingsManager.getPeriod()) - System.currentTimeMillis())));
 
                         for(String msg : localeManager.getLocale().perksEnabledMessages()) {
-                            player.sendMessage(AdventureUtil.serialize(player, localeManager.getLocale().prefix() + msg, placeholders));
+                            player.sendMessage(AdventureUtil.deserialize(player, localeManager.getLocale().prefix() + msg, placeholders));
                         }
                     }
 
-                    case SETTINGS_ERROR -> logger.error(AdventureUtil.serialize("Unable to apply perks due invalid plugin settings."));
+                    case SETTINGS_ERROR -> logger.error(AdventureUtil.deserialize("Unable to apply perks due invalid plugin settings."));
 
-                    case NO_PLAYER_DATA -> logger.error(AdventureUtil.serialize("Unable to apply perks due no player data found for the player " + player.getName() + "."));
+                    case NO_PLAYER_DATA -> logger.error(AdventureUtil.deserialize("Unable to apply perks due no player data found for the player " + player.getName() + "."));
 
-                    case USER_ERROR -> logger.error(AdventureUtil.serialize("Unable to apply perks due LuckPerms user found for the player " + player.getName() + "."));
+                    case USER_ERROR -> logger.error(AdventureUtil.deserialize("Unable to apply perks due LuckPerms user found for the player " + player.getName() + "."));
 
                     default -> {}
                 }
@@ -281,6 +294,14 @@ public class PerksManager {
             player.setFlying(true);
         }
 
+        if(skyFlightAPI != null && settings.skyflight()) {
+            PermissionNode infiniteFlight = PermissionNode.builder("skyflight.fly.infinite").value(true).build();
+            userData.add(infiniteFlight);
+            if(skyFlightAPI.canFlyInfinite(player, false)) {
+                skyFlightAPI.enableInfiniteFlight(player, true);
+            }
+        }
+
         // NOTE: Keep Inventory and Keep Exp is checked on Death.
 
         // Void Teleport
@@ -320,6 +341,12 @@ public class PerksManager {
             userData.remove(iFly);
             player.setAllowFlight(false);
             player.setFlying(false);
+        }
+
+        if(skyFlightAPI != null && settings.skyflight()) {
+            PermissionNode infiniteFlight = PermissionNode.builder("skyflight.fly.infinite").value(true).build();
+            userData.remove(infiniteFlight);
+            skyFlightAPI.disableFlight(player, true);
         }
 
         // Void Teleport

@@ -3,7 +3,7 @@ version: '${version}'
 main: com.github.lukesky19.newPlayerPerks.NewPlayerPerks
 api-version: '1.21'
 depend: [SkyLib, LuckPerms]
-softdepend: [BentoBox-VoidTeleport, Essentials, BentoBox-IslandFly]
+softdepend: [BentoBox-VoidTeleport, Essentials, BentoBox-IslandFly, SkyFlight]
 
 permissions:
     newplayerperks.commands.newplayerperks:

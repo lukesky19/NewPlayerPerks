@@ -12,6 +12,7 @@
 ## Soft Dependencies
 * Essentials
 * IslandFly Addon
+* SkyFlight
 * VoidTeleport Addon
 
 ## Commands
@@ -40,7 +41,7 @@
 ## FAQ
 Q: What versions does this plugin support?
 
-A: 1.21.4, 1.21.5, 1.21.6, 1.21.7, 1.21.8, 1.21.9, and 1.21.10.
+A: 1.21.4, 1.21.5, 1.21.6, 1.21.7, 1.21.8, 1.21.9, 1.21.10, and 1.21.11.
 
 Q: Are there any plans to support any other versions?
 
@@ -56,6 +57,7 @@ A: I only support Paper, but this will likely also work on forks of Paper (untes
 
 ## Building
 * Go to [SkyLib](https://github.com/lukesky19/SkyLib) and follow the "For Developers" instructions.
+* Go to [SkyFlight](https://github.com/lukesky19/SkyFlight) and follow the "For Developers" instructions.
 * Then run:
   ```./gradlew build```
 

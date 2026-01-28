@@ -57,11 +57,11 @@ public class HelpCommand {
 
                     if(ctx.getSource().getSender() instanceof Player player) {
                         for(String msg : locale.help()) {
-                            player.sendMessage(AdventureUtil.serialize(player, msg));
+                            player.sendMessage(AdventureUtil.deserialize(player, msg));
                         }
                     } else {
                         for(String msg : locale.help()) {
-                            logger.info(AdventureUtil.serialize(msg));
+                            logger.info(AdventureUtil.deserialize(msg));
                         }
                     }
 

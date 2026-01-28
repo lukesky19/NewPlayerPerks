@@ -73,7 +73,7 @@ public class TaskManager {
      */
     private void checkPerks() {
         if(settingsManager.getPeriod() == null) {
-            logger.error(AdventureUtil.serialize("Unable to check perks should be removed due to an invalid period in settings.yml."));
+            logger.error(AdventureUtil.deserialize("Unable to check perks should be removed due to an invalid period in settings.yml."));
             return;
         }
 

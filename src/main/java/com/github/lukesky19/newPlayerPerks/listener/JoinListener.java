@@ -81,7 +81,7 @@ public class JoinListener implements Listener {
         UUID uuid = player.getUniqueId();
 
         if(settingsManager.getPeriod() == null) {
-            logger.error(AdventureUtil.serialize("Unable to check if perks should be applied due to an invalid period in settings.yml."));
+            logger.error(AdventureUtil.deserialize("Unable to check if perks should be applied due to an invalid period in settings.yml."));
             return;
         }
 
@@ -99,15 +99,15 @@ public class JoinListener implements Listener {
                             Placeholder.parsed("remaining_time", localeManager.getTimeMessage((playerData.getJoinTime() + settingsManager.getPeriod()) - System.currentTimeMillis())));
 
                     for(String msg : localeManager.getLocale().perksEnabledMessages()) {
-                        player.sendMessage(AdventureUtil.serialize(player, localeManager.getLocale().prefix() + msg, placeholders));
+                        player.sendMessage(AdventureUtil.deserialize(player, localeManager.getLocale().prefix() + msg, placeholders));
                     }
                 }
 
-                case SETTINGS_ERROR -> logger.error(AdventureUtil.serialize("Unable to apply perks due invalid plugin settings."));
+                case SETTINGS_ERROR -> logger.error(AdventureUtil.deserialize("Unable to apply perks due invalid plugin settings."));
 
-                case NO_PLAYER_DATA -> logger.error(AdventureUtil.serialize("Unable to apply perks due no player data found for the player " + player.getName() + "."));
+                case NO_PLAYER_DATA -> logger.error(AdventureUtil.deserialize("Unable to apply perks due no player data found for the player " + player.getName() + "."));
 
-                case USER_ERROR -> logger.error(AdventureUtil.serialize("Unable to apply perks due to no LuckPerms user found for the player " + player.getName() + "."));
+                case USER_ERROR -> logger.error(AdventureUtil.deserialize("Unable to apply perks due to no LuckPerms user found for the player " + player.getName() + "."));
 
                 default -> {}
             }

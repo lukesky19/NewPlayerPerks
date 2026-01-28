@@ -83,13 +83,13 @@ public class EnableCommand {
                 Player player = (Player) ctx.getSource().getSender();
                 UUID uuid = player.getUniqueId();
                 if(settingsManager.getPeriod() == null) {
-                    logger.error(AdventureUtil.serialize("Unable to enable perks for player " + player.getName() + " due to an invalid period in settings.yml."));
+                    logger.error(AdventureUtil.deserialize("Unable to enable perks for player " + player.getName() + " due to an invalid period in settings.yml."));
                     return 0;
                 }
                 PlayerData playerData = playerDataManager.getPlayerData(uuid);
                 if(playerData == null) {
-                    player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.playerDataError()));
-                    logger.error(AdventureUtil.serialize("Unable to enable perks for player " + player.getName() + " due to no player data found for that player."));
+                    player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.playerDataError()));
+                    logger.error(AdventureUtil.deserialize("Unable to enable perks for player " + player.getName() + " due to no player data found for that player."));
                     return 0;
                 }
 
@@ -101,25 +101,25 @@ public class EnableCommand {
                                 Placeholder.parsed("remaining_time", localeManager.getTimeMessage((playerData.getJoinTime() + settingsManager.getPeriod()) - System.currentTimeMillis())));
 
                         for(String msg : locale.perksEnabledMessages()) {
-                            player.sendMessage(AdventureUtil.serialize(locale.prefix() + msg, placeholders));
+                            player.sendMessage(AdventureUtil.deserialize(locale.prefix() + msg, placeholders));
                         }
                     }
 
-                    case EXPIRED -> player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.enablePerksExpired()));
+                    case EXPIRED -> player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.enablePerksExpired()));
 
                     case SETTINGS_ERROR -> {
-                        player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.settingsError()));
-                        logger.error(AdventureUtil.serialize("Unable to enable perks for player " + player.getName() + " due to invalid plugin settings."));
+                        player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.settingsError()));
+                        logger.error(AdventureUtil.deserialize("Unable to enable perks for player " + player.getName() + " due to invalid plugin settings."));
                     }
 
                     case NO_PLAYER_DATA -> {
-                        player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.playerDataError()));
-                        logger.error(AdventureUtil.serialize("Unable to enable perks for player " + player.getName() + " due to no player data found for that player."));
+                        player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.playerDataError()));
+                        logger.error(AdventureUtil.deserialize("Unable to enable perks for player " + player.getName() + " due to no player data found for that player."));
                     }
 
                     case USER_ERROR -> {
-                        player.sendMessage(AdventureUtil.serialize(locale.prefix() + locale.userError()));
-                        logger.error(AdventureUtil.serialize("Unable to enable perks for player " + player.getName() + " due to no LuckPerms' User found for that player."));
+                        player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.userError()));
+                        logger.error(AdventureUtil.deserialize("Unable to enable perks for player " + player.getName() + " due to no LuckPerms' User found for that player."));
                     }
                 }
 

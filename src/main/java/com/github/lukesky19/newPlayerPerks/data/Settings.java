@@ -26,8 +26,9 @@ import org.jetbrains.annotations.Nullable;
  * @param locale The locale configuration to use.
  * @param invulnerable Should new players be invulnerable?
  * @param fly Legacy fly setting. Exists for migration purposes.
- * @param essentialsFly Should new players have access to /fly?
+ * @param essentialsFly Should new players have access to /fly from essentials?
  * @param islandFly Should new players have access to /is fly?
+ * @param skyflight Should new players have access to /fly from SkyFlight?
  * @param keepInventory Should new players have access to keep inventory?
  * @param keepExp Should new players have access to keep exp?
  * @param voidTeleport Should new players be teleported to their island when they fall off?
@@ -41,6 +42,7 @@ public record Settings(
         @Nullable Boolean fly,
         boolean essentialsFly,
         boolean islandFly,
+        boolean skyflight,
         boolean keepInventory,
         boolean keepExp,
         boolean voidTeleport,

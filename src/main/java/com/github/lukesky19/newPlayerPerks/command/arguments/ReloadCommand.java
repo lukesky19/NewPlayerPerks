@@ -66,7 +66,7 @@ public class ReloadCommand {
 
                     newPlayerPerks.reload();
 
-                    ctx.getSource().getSender().sendMessage(AdventureUtil.serialize(locale.prefix() + locale.reload()));
+                    ctx.getSource().getSender().sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.reload()));
 
                     return 1;
                 });

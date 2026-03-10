@@ -24,7 +24,7 @@ import com.github.lukesky19.newPlayerPerks.locale.LocaleManager;
 import com.github.lukesky19.newPlayerPerks.settings.Settings;
 import com.github.lukesky19.newPlayerPerks.settings.SettingsManager;
 import com.github.lukesky19.newPlayerPerks.util.PerksResult;
-import com.github.lukesky19.skyFlight.SkyFlightAPI;
+import com.github.lukesky19.skyFlight.api.SkyFlightAPI;
 import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;

@@ -21,7 +21,7 @@ repositories {
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
     compileOnly("com.github.lukesky19:SkyLib:1.5.0.0")
-    compileOnly("com.github.lukesky19:SkyFlight:0.1.0.0")
+    compileOnly("com.github.lukesky19:SkyFlight:0.2.0.0")
     compileOnly("net.luckperms:api:5.4")
 }
 

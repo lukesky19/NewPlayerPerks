@@ -89,33 +89,65 @@ public class PlayerDataTable {
                 "last_updated LONG NOT NULL DEFAULT 0)";
         String playerIdsIndexSql = "CREATE INDEX IF NOT EXISTS idx_" + tableName + "_player_ids ON " + tableName + "(player_id)";
 
-        versionsTable.getTableVersion(tableName).thenAccept(version -> {
-            if(version <= 0) {
-                if(settingsManager.getPeriod() == null) {
-                    logger.error(AdventureUtil.deserialize("Unable to migrate player data table due to invalid plugin settings."));
+        String tableExistsSql = "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type='table' AND name='" + tableName + "') AS table_exists";
+        queueManager.queueReadTransaction(tableExistsSql, resultSet -> {
+            try {
+                int exists = 0;
 
-                    newPlayerPerks.getServer().getScheduler().runTaskLater(newPlayerPerks, () ->
-                            newPlayerPerks.getServer().getPluginManager().disablePlugin(newPlayerPerks), 1L);
+                if(resultSet.next()) exists = resultSet.getInt(1);
 
-                    return;
-                }
+                return exists == 1;
+            } catch (SQLException e) {
+                logger.error(AdventureUtil.deserialize("Failed to check if the player data table exists."));
+                return null;
+            }
+        }).thenAccept(tableExists -> {
+            if(tableExists == null) return;
 
-                loadPlayerData(settingsManager.getPeriod()).thenCompose(playerDataMap -> {
-                    return queueManager.queueWriteTransaction("DROP TABLE " + tableName).thenCompose(result -> {
-                        return queueManager.queueBulkWriteTransaction(List.of(tableCreationSql, playerIdsIndexSql)).thenCompose(v1 ->  {
-                            return versionsTable.updateVersion(tableName, 1).thenCompose(v2 -> {
-                                return savePlayerData(playerDataMap);
+            if(tableExists) {
+                versionsTable.getTableVersion(tableName).thenAccept(version -> {
+                    if(version <= 0) {
+                        if(settingsManager.getPeriod() == null) {
+                            logger.error(AdventureUtil.deserialize("Unable to migrate player data table due to invalid plugin settings."));
+
+                            newPlayerPerks.getServer().getScheduler().runTaskLater(newPlayerPerks, () ->
+                                    newPlayerPerks.getServer().getPluginManager().disablePlugin(newPlayerPerks), 1L);
+
+                            return;
+                        }
+
+                        loadPlayerData(settingsManager.getPeriod()).thenCompose(playerDataMap -> {
+                            return queueManager.queueWriteTransaction("DROP TABLE " + tableName).thenCompose(result -> {
+                                return queueManager.queueBulkWriteTransaction(List.of(tableCreationSql, playerIdsIndexSql)).thenCompose(v1 ->  {
+                                    return versionsTable.updateVersion(tableName, 1).thenCompose(v2 -> {
+                                        return savePlayerData(playerDataMap);
+                                    });
+                                });
                             });
+                        }).exceptionally(ex -> {
+                            logger.error(AdventureUtil.deserialize("Failed to migrate player data table from version 0 to version 1. Error: " + ex.getMessage()));
+                            return null;
                         });
-                    });
-                }).exceptionally(ex -> {
-                    logger.error(AdventureUtil.deserialize("Failed to migrate player data table from version 0 to version 1."));
-                    return null;
+                    } else {
+                        queueManager.queueBulkWriteTransaction(List.of(tableCreationSql, playerIdsIndexSql))
+                                .thenAccept(v1 -> versionsTable.updateVersion(tableName, 1))
+                                .exceptionally(ex -> {
+                                    logger.error(AdventureUtil.deserialize("Failed to create the player data table."));
+                                    return null;
+                                });
+                    }
                 });
             } else {
                 queueManager.queueBulkWriteTransaction(List.of(tableCreationSql, playerIdsIndexSql))
-                        .thenAccept(v1 -> versionsTable.updateVersion(tableName, 1));
+                        .thenAccept(v1 -> versionsTable.updateVersion(tableName, 1))
+                        .exceptionally(ex -> {
+                            logger.error(AdventureUtil.deserialize("Failed to create the player data table."));
+                            return null;
+                        });
             }
+        }).exceptionally(ex -> {
+            logger.error(AdventureUtil.deserialize("Failed to check if the player data table exists."));
+            return null;
         });
     }
 

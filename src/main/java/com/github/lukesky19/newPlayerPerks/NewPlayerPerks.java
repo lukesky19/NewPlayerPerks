@@ -30,7 +30,8 @@ import com.github.lukesky19.newPlayerPerks.manager.PerksManager;
 import com.github.lukesky19.newPlayerPerks.manager.PlayerDataManager;
 import com.github.lukesky19.newPlayerPerks.settings.SettingsManager;
 import com.github.lukesky19.newPlayerPerks.task.TaskManager;
-import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
+import com.github.lukesky19.skylib.common.api.adventure.AdventureUtility;
+import com.github.lukesky19.skylib.paper.api.plugin.SkyPlugin;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.luckperms.api.LuckPerms;
 import org.bukkit.Bukkit;
@@ -38,14 +39,13 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.ServicePriority;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
 
 /**
  * The main plugin class
  */
-public final class NewPlayerPerks extends JavaPlugin {
+public final class NewPlayerPerks extends SkyPlugin {
     private SettingsManager settingsManager;
     private LocaleManager localeManager;
     private DatabaseManager databaseManager;
@@ -131,6 +131,7 @@ public final class NewPlayerPerks extends JavaPlugin {
     /**
      * Reloads all plugin data.
      */
+    @Override
     public void reload() {
         settingsManager.reload();
         localeManager.reload();
@@ -163,14 +164,14 @@ public final class NewPlayerPerks extends JavaPlugin {
         if (skyLib != null) {
             String version = skyLib.getPluginMeta().getVersion();
             String[] splitVersion = version.split("\\.");
-            int second = Integer.parseInt(splitVersion[1]);
+            int first = Integer.parseInt(splitVersion[0]);
 
-            if(second >= 4) {
+            if(first >= 2) {
                 return true;
             }
         }
 
-        this.getComponentLogger().error(AdventureUtil.deserialize("SkyLib Version 1.4.0.0 or newer is required to run this plugin."));
+        this.getComponentLogger().error(AdventureUtility.deserialize("SkyLib Version 2.0.0.0 or newer is required to run this plugin."));
         this.getServer().getPluginManager().disablePlugin(this);
         return false;
     }

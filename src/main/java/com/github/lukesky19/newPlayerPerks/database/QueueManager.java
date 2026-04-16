@@ -17,7 +17,7 @@
 */
 package com.github.lukesky19.newPlayerPerks.database;
 
-import com.github.lukesky19.skylib.api.database.queue.MultiThreadQueueManager;
+import com.github.lukesky19.skylib.common.api.database.queue.MultiThreadQueueManager;
 import org.jetbrains.annotations.NotNull;
 
 /**

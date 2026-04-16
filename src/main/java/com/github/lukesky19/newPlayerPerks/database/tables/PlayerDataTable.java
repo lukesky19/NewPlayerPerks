@@ -21,11 +21,11 @@ import com.github.lukesky19.newPlayerPerks.NewPlayerPerks;
 import com.github.lukesky19.newPlayerPerks.data.PlayerData;
 import com.github.lukesky19.newPlayerPerks.database.QueueManager;
 import com.github.lukesky19.newPlayerPerks.settings.SettingsManager;
-import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
-import com.github.lukesky19.skylib.api.database.parameter.Parameter;
-import com.github.lukesky19.skylib.api.database.parameter.impl.IntegerParameter;
-import com.github.lukesky19.skylib.api.database.parameter.impl.LongParameter;
-import com.github.lukesky19.skylib.api.database.parameter.impl.UUIDParameter;
+import com.github.lukesky19.skylib.common.api.adventure.AdventureUtility;
+import com.github.lukesky19.skylib.common.api.database.parameter.Parameter;
+import com.github.lukesky19.skylib.common.api.database.parameter.impl.IntegerParameter;
+import com.github.lukesky19.skylib.common.api.database.parameter.impl.LongParameter;
+import com.github.lukesky19.skylib.common.api.database.parameter.impl.UUIDParameter;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -98,7 +98,7 @@ public class PlayerDataTable {
 
                 return exists == 1;
             } catch (SQLException e) {
-                logger.error(AdventureUtil.deserialize("Failed to check if the player data table exists."));
+                logger.error(AdventureUtility.plain("Failed to check if the player data table exists."));
                 return null;
             }
         }).thenAccept(tableExists -> {
@@ -108,7 +108,7 @@ public class PlayerDataTable {
                 versionsTable.getTableVersion(tableName).thenAccept(version -> {
                     if(version <= 0) {
                         if(settingsManager.getPeriod() == null) {
-                            logger.error(AdventureUtil.deserialize("Unable to migrate player data table due to invalid plugin settings."));
+                            logger.error(AdventureUtility.plain("Unable to migrate player data table due to invalid plugin settings."));
 
                             newPlayerPerks.getServer().getScheduler().runTaskLater(newPlayerPerks, () ->
                                     newPlayerPerks.getServer().getPluginManager().disablePlugin(newPlayerPerks), 1L);
@@ -125,14 +125,14 @@ public class PlayerDataTable {
                                 });
                             });
                         }).exceptionally(ex -> {
-                            logger.error(AdventureUtil.deserialize("Failed to migrate player data table from version 0 to version 1. Error: " + ex.getMessage()));
+                            logger.error(AdventureUtility.plain("Failed to migrate player data table from version 0 to version 1. Error: " + ex.getMessage()));
                             return null;
                         });
                     } else {
                         queueManager.queueBulkWriteTransaction(List.of(tableCreationSql, playerIdsIndexSql))
                                 .thenAccept(v1 -> versionsTable.updateVersion(tableName, 1))
                                 .exceptionally(ex -> {
-                                    logger.error(AdventureUtil.deserialize("Failed to create the player data table."));
+                                    logger.error(AdventureUtility.plain("Failed to create the player data table."));
                                     return null;
                                 });
                     }
@@ -141,12 +141,12 @@ public class PlayerDataTable {
                 queueManager.queueBulkWriteTransaction(List.of(tableCreationSql, playerIdsIndexSql))
                         .thenAccept(v1 -> versionsTable.updateVersion(tableName, 1))
                         .exceptionally(ex -> {
-                            logger.error(AdventureUtil.deserialize("Failed to create the player data table."));
+                            logger.error(AdventureUtility.plain("Failed to create the player data table."));
                             return null;
                         });
             }
         }).exceptionally(ex -> {
-            logger.error(AdventureUtil.deserialize("Failed to check if the player data table exists."));
+            logger.error(AdventureUtility.plain("Failed to check if the player data table exists."));
             return null;
         });
     }

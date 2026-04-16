@@ -22,7 +22,8 @@ import com.github.lukesky19.newPlayerPerks.locale.Locale;
 import com.github.lukesky19.newPlayerPerks.locale.LocaleManager;
 import com.github.lukesky19.newPlayerPerks.manager.PerksManager;
 import com.github.lukesky19.newPlayerPerks.util.PerksResult;
-import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
+import com.github.lukesky19.skylib.common.api.adventure.AdventureUtility;
+import com.github.lukesky19.skylib.paper.api.adventure.PaperAdventureUtility;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -82,45 +83,45 @@ public class RemoveCommand {
                     switch(perksResult) {
                         case SUCCESS -> {
                             if(sender instanceof Player) {
-                                sender.sendMessage(AdventureUtil.deserialize(targetPlayer, locale.prefix() + locale.removedPerks(), placeholders));
+                                sender.sendMessage(PaperAdventureUtility.deserialize(targetPlayer, locale.prefix() + locale.removedPerks(), placeholders));
                             } else {
-                                logger.info(AdventureUtil.deserialize(targetPlayer, locale.removedPerks(), placeholders));
+                                logger.info(PaperAdventureUtility.deserialize(targetPlayer, locale.removedPerks(), placeholders));
                             }
 
                             for(String msg : locale.perksRemovedMessages()) {
-                                targetPlayer.sendMessage(AdventureUtil.deserialize(locale.prefix() + msg));
+                                targetPlayer.sendMessage(AdventureUtility.deserialize(locale.prefix() + msg));
                             }
                         }
 
                         case EXPIRED -> {
                             if(sender instanceof Player) {
-                                sender.sendMessage(AdventureUtil.deserialize(targetPlayer, locale.prefix() + locale.expiredError()));
+                                sender.sendMessage(PaperAdventureUtility.deserialize(targetPlayer, locale.prefix() + locale.expiredError()));
                             } else {
-                                logger.info(AdventureUtil.deserialize(targetPlayer, locale.expiredError()));
+                                logger.info(PaperAdventureUtility.deserialize(targetPlayer, locale.expiredError()));
                             }
                         }
 
                         case SETTINGS_ERROR -> {
                             if(sender instanceof Player) {
-                                sender.sendMessage(AdventureUtil.deserialize(targetPlayer, locale.prefix() + locale.settingsError()));
+                                sender.sendMessage(PaperAdventureUtility.deserialize(targetPlayer, locale.prefix() + locale.settingsError()));
                             } else {
-                                logger.info(AdventureUtil.deserialize(targetPlayer, locale.settingsError()));
+                                logger.info(PaperAdventureUtility.deserialize(targetPlayer, locale.settingsError()));
                             }
                         }
 
                         case NO_PLAYER_DATA -> {
                             if(sender instanceof Player) {
-                                sender.sendMessage(AdventureUtil.deserialize(targetPlayer, locale.prefix() + locale.playerDataError()));
+                                sender.sendMessage(PaperAdventureUtility.deserialize(targetPlayer, locale.prefix() + locale.playerDataError()));
                             } else {
-                                logger.info(AdventureUtil.deserialize(targetPlayer, locale.playerDataError()));
+                                logger.info(PaperAdventureUtility.deserialize(targetPlayer, locale.playerDataError()));
                             }
                         }
 
                         case USER_ERROR -> {
                             if(sender instanceof Player) {
-                                sender.sendMessage(AdventureUtil.deserialize(targetPlayer, locale.prefix() + locale.userError()));
+                                sender.sendMessage(PaperAdventureUtility.deserialize(targetPlayer, locale.prefix() + locale.userError()));
                             } else {
-                                logger.info(AdventureUtil.deserialize(targetPlayer, locale.userError()));
+                                logger.info(PaperAdventureUtility.deserialize(targetPlayer, locale.userError()));
                             }
                         }
                     }

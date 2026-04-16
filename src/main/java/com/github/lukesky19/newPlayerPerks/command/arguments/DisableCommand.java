@@ -25,7 +25,7 @@ import com.github.lukesky19.newPlayerPerks.manager.PerksManager;
 import com.github.lukesky19.newPlayerPerks.manager.PlayerDataManager;
 import com.github.lukesky19.newPlayerPerks.settings.SettingsManager;
 import com.github.lukesky19.newPlayerPerks.util.PerksResult;
-import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
+import com.github.lukesky19.skylib.common.api.adventure.AdventureUtility;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -81,13 +81,13 @@ public class DisableCommand {
                 Player player = (Player) ctx.getSource().getSender();
                 UUID uuid = player.getUniqueId();
                 if(settingsManager.getPeriod() == null) {
-                    logger.error(AdventureUtil.deserialize("Unable to disable perks for player " + player.getName() + " due to an invalid period in settings.yml."));
+                    logger.error(AdventureUtility.plain("Unable to disable perks for player " + player.getName() + " due to an invalid period in settings.yml."));
                     return 0;
                 }
                 PlayerData playerData = playerDataManager.getPlayerData(uuid);
                 if(playerData == null) {
-                    player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.playerDataError()));
-                    logger.error(AdventureUtil.deserialize("Unable to disable perks for player " + player.getName() + " due to no player data found for that player."));
+                    player.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.playerDataError()));
+                    logger.error(AdventureUtility.plain("Unable to disable perks for player " + player.getName() + " due to no player data found for that player."));
                     return 0;
                 }
 
@@ -100,26 +100,26 @@ public class DisableCommand {
                                 Placeholder.parsed("remaining_time", localeManager.getTimeMessage(playerData.getPerkTime())));
 
                         for (String msg : locale.perksDisabledMessages()) {
-                            player.sendMessage(AdventureUtil.deserialize(locale.prefix() + msg, placeholders));
+                            player.sendMessage(AdventureUtility.deserialize(locale.prefix() + msg, placeholders));
                         }
                     }
 
                     case EXPIRED ->
-                            player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.disablePerksExpired()));
+                            player.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.disablePerksExpired()));
 
                     case SETTINGS_ERROR -> {
-                        player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.playerDataError()));
-                        logger.error(AdventureUtil.deserialize("Unable to disable perks for player " + player.getName() + " due to invalid plugin settings."));
+                        player.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.playerDataError()));
+                        logger.error(AdventureUtility.plain("Unable to disable perks for player " + player.getName() + " due to invalid plugin settings."));
                     }
 
                     case NO_PLAYER_DATA -> {
-                        player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.playerDataError()));
-                        logger.error(AdventureUtil.deserialize("Unable to disable perks for player " + player.getName() + " due to no player data found for that player."));
+                        player.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.playerDataError()));
+                        logger.error(AdventureUtility.plain("Unable to disable perks for player " + player.getName() + " due to no player data found for that player."));
                     }
 
                     case USER_ERROR -> {
-                        player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.userError()));
-                        logger.error(AdventureUtil.deserialize("Unable to disable perks for player " + player.getName() + " due to no LuckPerms' User found for that player."));
+                        player.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.userError()));
+                        logger.error(AdventureUtility.plain("Unable to disable perks for player " + player.getName() + " due to no LuckPerms' User found for that player."));
                     }
                 }
 

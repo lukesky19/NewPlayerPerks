@@ -20,12 +20,12 @@ package com.github.lukesky19.newPlayerPerks.locale;
 import com.github.lukesky19.newPlayerPerks.NewPlayerPerks;
 import com.github.lukesky19.newPlayerPerks.settings.Settings;
 import com.github.lukesky19.newPlayerPerks.settings.SettingsManager;
-import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
-import com.github.lukesky19.skylib.api.configurate.ConfigurationUtility;
-import com.github.lukesky19.skylib.api.time.Time;
-import com.github.lukesky19.skylib.api.time.TimeUtil;
+import com.github.lukesky19.skylib.common.api.adventure.AdventureUtility;
+import com.github.lukesky19.skylib.common.api.time.Time;
+import com.github.lukesky19.skylib.common.api.time.TimeUtil;
 import com.github.lukesky19.skylib.libs.configurate.CommentedConfigurationNode;
 import com.github.lukesky19.skylib.libs.configurate.ConfigurateException;
+import com.github.lukesky19.skylib.libs.configurate.yaml.NodeStyle;
 import com.github.lukesky19.skylib.libs.configurate.yaml.YamlConfigurationLoader;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -33,6 +33,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -95,6 +96,7 @@ public class LocaleManager {
 
     /**
      * Constructor
+     *
      * @param newPlayerPerks A {@link NewPlayerPerks} instance.
      * @param settingsManager A {@link SettingsManager} intsance.
      */
@@ -105,10 +107,11 @@ public class LocaleManager {
 
     /**
      * Get the plugin's {@link Locale} or the default {@link Locale} if the user-configured version failed to load.
+     *
      * @return The {@link Locale}.
      */
     public @NotNull Locale getLocale() {
-        if(locale == null) return DEFAULT_LOCALE;
+        if (locale == null) return DEFAULT_LOCALE;
 
         return locale;
     }
@@ -123,12 +126,12 @@ public class LocaleManager {
         copyDefaultLocales();
 
         Settings settings = settingsManager.getSettings();
-        if(settings == null) {
-            logger.error(AdventureUtil.deserialize("Unable to load the plugin's locale due to invalid plugin settings. The default locale will be used."));
+        if (settings == null) {
+            logger.error(AdventureUtility.plain("Unable to load the plugin's locale due to invalid plugin settings. The default locale will be used."));
             return;
         }
-        if(settings.locale() == null) {
-            logger.error(AdventureUtil.deserialize("Unable to load the plugin's locale due to a locale not being configured in settings.yml. The default locale will be used."));
+        if (settings.locale() == null) {
+            logger.error(AdventureUtility.plain("Unable to load the plugin's locale due to a locale not being configured in settings.yml. The default locale will be used."));
             return;
         }
 
@@ -139,12 +142,12 @@ public class LocaleManager {
                         + File.separator
                         + settings.locale()
                         + ".yml");
-        YamlConfigurationLoader loader = ConfigurationUtility.getYamlConfigurationLoader(path);
+        YamlConfigurationLoader loader = createLoader(path);
 
         try {
             locale = loader.load().get(Locale.class);
         } catch (ConfigurateException e) {
-            logger.error(AdventureUtil.deserialize("Failed to load the locale configuration. Error: " + e.getMessage()));
+            logger.error(AdventureUtility.deserialize("Failed to load the locale configuration. Error: " + e.getMessage()));
             return;
         }
 
@@ -152,16 +155,16 @@ public class LocaleManager {
     }
 
     private void saveLocale() {
-        if(locale == null) return;
+        if (locale == null) return;
         ComponentLogger logger = newPlayerPerks.getComponentLogger();
 
         Settings settings = settingsManager.getSettings();
-        if(settings == null) {
-            logger.error(AdventureUtil.deserialize("Unable to save the plugin's locale due to invalid plugin settings. The default locale will be used."));
+        if (settings == null) {
+            logger.error(AdventureUtility.deserialize("Unable to save the plugin's locale due to invalid plugin settings. The default locale will be used."));
             return;
         }
-        if(settings.locale() == null) {
-            logger.error(AdventureUtil.deserialize("Unable to save the plugin's locale due to a locale not being configured in settings.yml. The default locale will be used."));
+        if (settings.locale() == null) {
+            logger.error(AdventureUtility.deserialize("Unable to save the plugin's locale due to a locale not being configured in settings.yml. The default locale will be used."));
             return;
         }
 
@@ -172,7 +175,7 @@ public class LocaleManager {
                         + File.separator
                         + settings.locale()
                         + ".yml");
-        YamlConfigurationLoader loader = ConfigurationUtility.getYamlConfigurationLoader(path);
+        YamlConfigurationLoader loader = createLoader(path);
         CommentedConfigurationNode node = loader.createNode();
 
         try {
@@ -180,15 +183,15 @@ public class LocaleManager {
 
             loader.save(node);
         } catch (ConfigurateException e) {
-            logger.error(AdventureUtil.deserialize("Failed to save the locale configuration. Error: " + e.getMessage()));
+            logger.error(AdventureUtility.deserialize("Failed to save the locale configuration. Error: " + e.getMessage()));
         }
     }
 
     private void migrateLocale() {
-        if(locale == null) return;
+        if (locale == null) return;
         ComponentLogger logger = newPlayerPerks.getComponentLogger();
 
-        switch(locale.configVersion()) {
+        switch (locale.configVersion()) {
             case "1.2.0.0" -> {
                 // Current version, do nothing
             }
@@ -287,7 +290,8 @@ public class LocaleManager {
                 saveLocale();
             }
 
-            default -> logger.error(AdventureUtil.deserialize("Unable to migrate locale configuration due to an unrecognized config version."));
+            default ->
+                    logger.error(AdventureUtility.deserialize("Unable to migrate locale configuration due to an unrecognized config version."));
         }
     }
 
@@ -321,7 +325,7 @@ public class LocaleManager {
 
         StringBuilder stringBuilder = getStringBuilder(locale, timeRecord);
 
-        return MiniMessage.miniMessage().serialize(AdventureUtil.deserialize(stringBuilder.toString(), placeholders));
+        return MiniMessage.miniMessage().serialize(AdventureUtility.deserialize(stringBuilder.toString(), placeholders));
     }
 
     /**
@@ -338,7 +342,7 @@ public class LocaleManager {
 
         boolean isFirstUnit = true;
 
-        if(timeRecord.years() > 0) {
+        if (timeRecord.years() > 0) {
             stringBuilder.append(timeMessage.years());
             isFirstUnit = false;
         }
@@ -391,11 +395,24 @@ public class LocaleManager {
             isFirstUnit = false;
         }
 
-        if(isFirstUnit) {
+        if (isFirstUnit) {
             stringBuilder.append(timeMessage.seconds());
         }
 
         stringBuilder.append(timeMessage.suffix());
         return stringBuilder;
+    }
+
+    /**
+     * Create the {@link YamlConfigurationLoader} for the path provided.
+     * @param path The {@link Path}.
+     * @return The {@link YamlConfigurationLoader}.
+     */
+    protected @NonNull YamlConfigurationLoader createLoader(@NonNull Path path) {
+        return YamlConfigurationLoader.builder()
+                .path(path)
+                .nodeStyle(NodeStyle.BLOCK)
+                .indent(4)
+                .build();
     }
 }

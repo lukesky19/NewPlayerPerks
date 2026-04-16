@@ -21,7 +21,7 @@ import com.github.lukesky19.newPlayerPerks.NewPlayerPerks;
 import com.github.lukesky19.newPlayerPerks.database.tables.PlayerDataTable;
 import com.github.lukesky19.newPlayerPerks.database.tables.VersionsTable;
 import com.github.lukesky19.newPlayerPerks.settings.SettingsManager;
-import com.github.lukesky19.skylib.api.database.AbstractDatabaseManager;
+import com.github.lukesky19.skylib.common.api.database.AbstractDatabaseManager;
 import org.jetbrains.annotations.NotNull;
 
 /**

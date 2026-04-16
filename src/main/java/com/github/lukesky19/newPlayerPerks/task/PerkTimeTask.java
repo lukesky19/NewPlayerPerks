@@ -22,7 +22,7 @@ import com.github.lukesky19.newPlayerPerks.locale.Locale;
 import com.github.lukesky19.newPlayerPerks.locale.LocaleManager;
 import com.github.lukesky19.newPlayerPerks.manager.PerksManager;
 import com.github.lukesky19.newPlayerPerks.manager.PlayerDataManager;
-import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
+import com.github.lukesky19.skylib.common.api.adventure.AdventureUtility;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -73,7 +73,7 @@ public class PerkTimeTask extends BukkitRunnable {
                     perksManager.disablePerks(player, playerId, false);
 
                     for(String msg : locale.perksExpiredMessages()) {
-                        player.sendMessage(AdventureUtil.deserialize(locale.prefix() + msg));
+                        player.sendMessage(AdventureUtility.deserialize(locale.prefix() + msg));
                     }
                 }
             }

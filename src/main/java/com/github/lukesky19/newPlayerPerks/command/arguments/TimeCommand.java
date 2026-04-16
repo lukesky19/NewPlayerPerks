@@ -22,7 +22,7 @@ import com.github.lukesky19.newPlayerPerks.data.PlayerData;
 import com.github.lukesky19.newPlayerPerks.locale.Locale;
 import com.github.lukesky19.newPlayerPerks.locale.LocaleManager;
 import com.github.lukesky19.newPlayerPerks.manager.PlayerDataManager;
-import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
+import com.github.lukesky19.skylib.common.api.adventure.AdventureUtility;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -78,8 +78,8 @@ public class TimeCommand {
 
                         PlayerData playerData = playerDataManager.getPlayerData(targetPlayerId);
                         if(playerData == null) {
-                            commandSender.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.playerDataError()));
-                            logger.error(AdventureUtil.deserialize("Unable to display perk time for player " + targetPlayer.getName() + " due to no player data found for that player."));
+                            commandSender.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.playerDataError()));
+                            logger.error(AdventureUtility.plain("Unable to display perk time for player " + targetPlayer.getName() + " due to no player data found for that player."));
                             return 0;
                         }
 
@@ -87,7 +87,7 @@ public class TimeCommand {
                                 Placeholder.parsed("player_name", targetPlayer.getName()),
                                 Placeholder.parsed("time", localeManager.getTimeMessage(playerData.getPerkTime())));
 
-                        commandSender.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.playerPerkTime(), placeholders));
+                        commandSender.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.playerPerkTime(), placeholders));
 
                         return 1;
                     })
@@ -98,14 +98,14 @@ public class TimeCommand {
                     UUID uuid = player.getUniqueId();
                     PlayerData playerData = playerDataManager.getPlayerData(uuid);
                     if(playerData == null) {
-                        player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.playerDataError()));
-                        logger.error(AdventureUtil.deserialize("Unable to display perk time for player " + player.getName() + " due to no player data found for that player."));
+                        player.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.playerDataError()));
+                        logger.error(AdventureUtility.deserialize("Unable to display perk time for player " + player.getName() + " due to no player data found for that player."));
                         return 0;
                     }
 
                     List<TagResolver.Single> placeholders = List.of(Placeholder.parsed("time", localeManager.getTimeMessage(playerData.getPerkTime())));
 
-                    player.sendMessage(AdventureUtil.deserialize(locale.prefix() + locale.perkTime(), placeholders));
+                    player.sendMessage(AdventureUtility.deserialize(locale.prefix() + locale.perkTime(), placeholders));
 
                     return 1;
                 }).build();

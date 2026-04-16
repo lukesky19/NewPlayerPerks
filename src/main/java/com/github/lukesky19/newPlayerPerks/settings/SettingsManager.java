@@ -18,15 +18,16 @@
 package com.github.lukesky19.newPlayerPerks.settings;
 
 import com.github.lukesky19.newPlayerPerks.NewPlayerPerks;
-import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
-import com.github.lukesky19.skylib.api.configurate.ConfigurationUtility;
-import com.github.lukesky19.skylib.api.time.TimeUtil;
+import com.github.lukesky19.skylib.common.api.adventure.AdventureUtility;
+import com.github.lukesky19.skylib.common.api.time.TimeUtil;
 import com.github.lukesky19.skylib.libs.configurate.CommentedConfigurationNode;
 import com.github.lukesky19.skylib.libs.configurate.ConfigurateException;
+import com.github.lukesky19.skylib.libs.configurate.yaml.NodeStyle;
 import com.github.lukesky19.skylib.libs.configurate.yaml.YamlConfigurationLoader;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -75,11 +76,11 @@ public class SettingsManager {
             newPlayerPerks.saveResource("settings.yml", false);
         }
 
-        YamlConfigurationLoader loader = ConfigurationUtility.getYamlConfigurationLoader(path);
+        YamlConfigurationLoader loader = createLoader(path);
         try {
             settings = loader.load().get(Settings.class);
         } catch (ConfigurateException e) {
-            logger.error(AdventureUtil.deserialize("Unable to load plugin settings due to an error: " + e.getMessage()));
+            logger.error(AdventureUtility.plain("Unable to load plugin settings due to an error: " + e.getMessage()));
             return;
         }
 
@@ -129,7 +130,7 @@ public class SettingsManager {
         if(settings == null) return;
         Path path = Path.of(newPlayerPerks.getDataFolder() + File.separator + "settings.yml");
 
-        YamlConfigurationLoader loader = ConfigurationUtility.getYamlConfigurationLoader(path);
+        YamlConfigurationLoader loader = createLoader(path);
         CommentedConfigurationNode node = loader.createNode();
         try {
             node.set(Settings.class, settings);
@@ -138,5 +139,18 @@ public class SettingsManager {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Create the {@link YamlConfigurationLoader} for the path provided.
+     * @param path The {@link Path}.
+     * @return The {@link YamlConfigurationLoader}.
+     */
+    protected @NonNull YamlConfigurationLoader createLoader(@NonNull Path path) {
+        return YamlConfigurationLoader.builder()
+                .path(path)
+                .nodeStyle(NodeStyle.BLOCK)
+                .indent(4)
+                .build();
     }
 }

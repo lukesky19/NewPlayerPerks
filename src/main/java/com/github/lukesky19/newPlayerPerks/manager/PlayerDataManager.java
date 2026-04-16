@@ -21,14 +21,15 @@ import com.github.lukesky19.newPlayerPerks.NewPlayerPerks;
 import com.github.lukesky19.newPlayerPerks.data.PlayerData;
 import com.github.lukesky19.newPlayerPerks.database.DatabaseManager;
 import com.github.lukesky19.newPlayerPerks.database.tables.PlayerDataTable;
-import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
-import com.github.lukesky19.skylib.api.configurate.ConfigurationUtility;
+import com.github.lukesky19.skylib.common.api.adventure.AdventureUtility;
 import com.github.lukesky19.skylib.libs.configurate.ConfigurateException;
+import com.github.lukesky19.skylib.libs.configurate.yaml.NodeStyle;
 import com.github.lukesky19.skylib.libs.configurate.yaml.YamlConfigurationLoader;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -138,7 +139,7 @@ public class PlayerDataManager {
             return playerData;
         }).exceptionally(throwable -> {
             if(throwable != null) {
-                logger.error(AdventureUtil.deserialize("Loading of player data failed: " + throwable.getMessage()));
+                logger.error(AdventureUtility.plain("Loading of player data failed: " + throwable.getMessage()));
             }
 
             return null;
@@ -205,7 +206,7 @@ public class PlayerDataManager {
                             String nameWithoutExtension = fileName.replaceAll("\\.yml$", "");
                             UUID uuid = UUID.fromString(nameWithoutExtension);
 
-                            @NotNull YamlConfigurationLoader loader = ConfigurationUtility.getYamlConfigurationLoader(path);
+                            @NotNull YamlConfigurationLoader loader = createLoader(path);
                             try {
                                 PlayerData playerData = loader.load().get(PlayerData.class);
                                 if (playerData != null) {
@@ -215,14 +216,14 @@ public class PlayerDataManager {
                                 try {
                                     Files.delete(path);
                                 } catch (IOException e) {
-                                    logger.warn(AdventureUtil.deserialize("Failed to delete legacy player data for file: " + path.toFile() + ". Error: " + e.getMessage()));
+                                    logger.warn(AdventureUtility.deserialize("Failed to delete legacy player data for file: " + path.toFile() + ". Error: " + e.getMessage()));
                                 }
                             } catch (ConfigurateException e) {
-                                logger.warn(AdventureUtil.deserialize("Failed to migrate legacy player data for file: " + path.toFile() + ". Error: " + e.getMessage()));
+                                logger.warn(AdventureUtility.deserialize("Failed to migrate legacy player data for file: " + path.toFile() + ". Error: " + e.getMessage()));
                             }
                         });
             } catch (IOException e) {
-                logger.warn(AdventureUtil.deserialize("Failed to migrate legacy player data. Error: " + e.getMessage()));
+                logger.warn(AdventureUtility.deserialize("Failed to migrate legacy player data. Error: " + e.getMessage()));
                 return CompletableFuture.completedFuture(null);
             }
 
@@ -233,14 +234,27 @@ public class PlayerDataManager {
                     Files.delete(playerDataPath);
                 }
             } catch (IOException e) {
-                logger.error(AdventureUtil.deserialize(e.getMessage()));
+                logger.error(AdventureUtility.deserialize(e.getMessage()));
                 return CompletableFuture.completedFuture(null);
             }
 
             return CompletableFuture.allOf(futureList.toArray(new CompletableFuture[0]));
         } catch (RuntimeException e) {
-            logger.error(AdventureUtil.deserialize(e.getMessage()));
+            logger.error(AdventureUtility.deserialize(e.getMessage()));
             return CompletableFuture.completedFuture(null);
         }
+    }
+
+    /**
+     * Create the {@link YamlConfigurationLoader} for the path provided.
+     * @param path The {@link Path}.
+     * @return The {@link YamlConfigurationLoader}.
+     */
+    protected @NonNull YamlConfigurationLoader createLoader(@NonNull Path path) {
+        return YamlConfigurationLoader.builder()
+                .path(path)
+                .nodeStyle(NodeStyle.BLOCK)
+                .indent(4)
+                .build();
     }
 }

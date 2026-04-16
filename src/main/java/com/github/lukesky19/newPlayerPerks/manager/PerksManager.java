@@ -25,7 +25,8 @@ import com.github.lukesky19.newPlayerPerks.settings.Settings;
 import com.github.lukesky19.newPlayerPerks.settings.SettingsManager;
 import com.github.lukesky19.newPlayerPerks.util.PerksResult;
 import com.github.lukesky19.skyFlight.api.SkyFlightAPI;
-import com.github.lukesky19.skylib.api.adventure.AdventureUtil;
+import com.github.lukesky19.skylib.common.api.adventure.AdventureUtility;
+import com.github.lukesky19.skylib.paper.api.adventure.PaperAdventureUtility;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -88,7 +89,7 @@ public class PerksManager {
      */
     public boolean doesPlayerHavePerks(@NotNull UUID uuid) {
         if(settingsManager.getPeriod() == null) {
-            logger.error(AdventureUtil.deserialize("Unable to check if player has perks due to an invalid period in settings.yml."));
+            logger.error(AdventureUtility.plain("Unable to check if player has perks due to an invalid period in settings.yml."));
             return false;
         }
 
@@ -205,7 +206,7 @@ public class PerksManager {
      */
     public void enableAllPerks() {
         if(settingsManager.getPeriod() == null) {
-            logger.error(AdventureUtil.deserialize("Unable to check if perks should be applied due to an invalid period in settings.yml."));
+            logger.error(AdventureUtility.deserialize("Unable to check if perks should be applied due to an invalid period in settings.yml."));
             return;
         }
 
@@ -222,15 +223,15 @@ public class PerksManager {
                                 Placeholder.parsed("remaining_time", localeManager.getTimeMessage(playerData.getPerkTime())));
 
                         for(String msg : localeManager.getLocale().perksEnabledMessages()) {
-                            player.sendMessage(AdventureUtil.deserialize(player, localeManager.getLocale().prefix() + msg, placeholders));
+                            player.sendMessage(PaperAdventureUtility.deserialize(player, localeManager.getLocale().prefix() + msg, placeholders));
                         }
                     }
 
-                    case SETTINGS_ERROR -> logger.error(AdventureUtil.deserialize("Unable to apply perks due invalid plugin settings."));
+                    case SETTINGS_ERROR -> logger.error(AdventureUtility.deserialize("Unable to apply perks due invalid plugin settings."));
 
-                    case NO_PLAYER_DATA -> logger.error(AdventureUtil.deserialize("Unable to apply perks due no player data found for the player " + player.getName() + "."));
+                    case NO_PLAYER_DATA -> logger.error(AdventureUtility.deserialize("Unable to apply perks due no player data found for the player " + player.getName() + "."));
 
-                    case USER_ERROR -> logger.error(AdventureUtil.deserialize("Unable to apply perks due LuckPerms user found for the player " + player.getName() + "."));
+                    case USER_ERROR -> logger.error(AdventureUtility.deserialize("Unable to apply perks due LuckPerms user found for the player " + player.getName() + "."));
 
                     default -> {}
                 }

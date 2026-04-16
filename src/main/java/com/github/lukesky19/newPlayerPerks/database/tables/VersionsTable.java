@@ -17,9 +17,9 @@
 */
 package com.github.lukesky19.newPlayerPerks.database.tables;
 
-import com.github.lukesky19.skylib.api.database.parameter.impl.IntegerParameter;
-import com.github.lukesky19.skylib.api.database.parameter.impl.StringParameter;
-import com.github.lukesky19.skylib.api.database.queue.QueueManager;
+import com.github.lukesky19.newPlayerPerks.database.QueueManager;
+import com.github.lukesky19.skylib.common.api.database.parameter.impl.IntegerParameter;
+import com.github.lukesky19.skylib.common.api.database.parameter.impl.StringParameter;
 import org.jetbrains.annotations.NotNull;
 
 import java.sql.SQLException;

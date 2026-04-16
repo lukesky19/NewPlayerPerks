@@ -1,32 +1,36 @@
 plugins {
-    java
+    `java-library`
     `maven-publish`
 }
 
 group = "com.github.lukesky19"
-version = "1.3.0.0"
+version = "1.4.0.0"
 
 repositories {
     mavenCentral()
+    mavenLocal()
     maven("https://repo.papermc.io/repository/maven-public/") {
         name = "papermc-repo"
     }
     maven("https://oss.sonatype.org/content/groups/public/") {
         name = "sonatype"
     }
-
-    mavenLocal()
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
-    compileOnly("com.github.lukesky19:SkyLib:1.5.0.0")
+    // Paper
+    compileOnly("io.papermc.paper:paper-api:26.1.2.build.+")
+
+    // SkyLib
+    compileOnly("com.github.lukesky19:SkyLib:2.0.0.0")
+
+    // Integration
     compileOnly("com.github.lukesky19:SkyFlight:0.2.0.0")
     compileOnly("net.luckperms:api:5.4")
 }
 
 java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
+    toolchain.languageVersion.set(JavaLanguageVersion.of(25))
 }
 
 tasks {

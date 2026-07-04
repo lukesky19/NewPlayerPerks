@@ -33,6 +33,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.luckperms.api.model.data.NodeMap;
 import net.luckperms.api.model.user.User;
 import net.luckperms.api.model.user.UserManager;
+import net.luckperms.api.node.NodeEqualityPredicate;
 import net.luckperms.api.node.types.PermissionNode;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
@@ -259,7 +260,6 @@ public class PerksManager {
             });
     }
 
-
     /**
      * Set the perks based on the plugin's settings.
      * @param settings The plugin's {@link Settings}.
@@ -268,7 +268,12 @@ public class PerksManager {
      * @param user The LuckPerm's {@link User} to apply perks to.
      * @param userData The user's data from LuckPerms, See {@link User#data()}.
      */
-    private void setPerks(@NotNull Settings settings, @NotNull UserManager userManager, @NotNull Player player, @NotNull User user, @NotNull NodeMap userData) {
+    private void setPerks(
+            @NotNull Settings settings,
+            @NotNull UserManager userManager,
+            @NotNull Player player,
+            @NotNull User user,
+            @NotNull NodeMap userData) {
         // Invulnerable
         if(settings.invulnerable()) {
             player.setInvulnerable(true);
@@ -276,22 +281,34 @@ public class PerksManager {
 
         // Fly
         if(settings.essentialsFly()) {
-            PermissionNode eFly = PermissionNode.builder("essentials.fly").value(true).build();
-            userData.add(eFly);
+            PermissionNode eFly = PermissionNode.builder("essentials.fly").value(true)
+                    .withContext("NewPlayerPerks", "true").build();
+            if(!userData.contains(eFly, NodeEqualityPredicate.EXACT).asBoolean()) {
+                userData.add(eFly);
+            }
+
             player.setAllowFlight(true);
             player.setFlying(true);
         }
 
         if(settings.islandFly()) {
-            PermissionNode iFly = PermissionNode.builder("bskyblock.island.fly").value(true).build();
-            userData.add(iFly);
+            PermissionNode iFly = PermissionNode.builder("bskyblock.island.fly").value(true)
+                    .withContext("NewPlayerPerks", "true").build();
+            if(!userData.contains(iFly, NodeEqualityPredicate.EXACT).asBoolean()) {
+                userData.add(iFly);
+            }
+
             player.setAllowFlight(true);
             player.setFlying(true);
         }
 
         if(skyFlightAPI != null && settings.skyflight()) {
-            PermissionNode infiniteFlight = PermissionNode.builder("skyflight.fly.infinite").value(true).build();
-            userData.add(infiniteFlight);
+            PermissionNode infiniteFlight = PermissionNode.builder("skyflight.fly.infinite").value(true)
+                    .withContext("NewPlayerPerks", "true").build();
+            if(!userData.contains(infiniteFlight, NodeEqualityPredicate.EXACT).asBoolean()) {
+                userData.add(infiniteFlight);
+            }
+
             if(skyFlightAPI.canFlyInfinite(player, false)) {
                 skyFlightAPI.enableInfiniteFlight(player, true);
             }
@@ -301,8 +318,11 @@ public class PerksManager {
 
         // Void Teleport
         if(settings.voidTeleport()) {
-            PermissionNode voidTele = PermissionNode.builder("bskyblock.voidteleport").value(true).build();
-            userData.add(voidTele);
+            PermissionNode voidTele = PermissionNode.builder("bskyblock.voidteleport").value(true)
+                    .withContext("NewPlayerPerks", "true").build();
+            if(!userData.contains(voidTele, NodeEqualityPredicate.EXACT).asBoolean()) {
+                userData.add(voidTele);
+            }
         }
 
         // Save modified User
@@ -317,7 +337,12 @@ public class PerksManager {
      * @param user The LuckPerm's {@link User} to remove perks from.
      * @param userData The user's data from LuckPerms, See {@link User#data()}.
      */
-    private void unsetPerks(@NotNull Settings settings, @NotNull UserManager userManager, @NotNull Player player, @NotNull User user, @NotNull NodeMap userData) {
+    private void unsetPerks(
+            @NotNull Settings settings,
+            @NotNull UserManager userManager,
+            @NotNull Player player,
+            @NotNull User user,
+            @NotNull NodeMap userData) {
         // Invulnerable
         if(settings.invulnerable()) {
             player.setInvulnerable(false);
@@ -325,29 +350,41 @@ public class PerksManager {
 
         // Fly
         if(settings.essentialsFly()) {
-            PermissionNode eFly = PermissionNode.builder("essentials.fly").build();
-            userData.remove(eFly);
-            player.setAllowFlight(false);
-            player.setFlying(false);
+            PermissionNode eFly = PermissionNode.builder("essentials.fly").value(true)
+                    .withContext("NewPlayerPerks", "true").build();
+            if(userData.contains(eFly, NodeEqualityPredicate.EXACT).asBoolean()) {
+                userData.remove(eFly);
+                player.setAllowFlight(false);
+                player.setFlying(false);
+            }
         }
 
         if(settings.islandFly()) {
-            PermissionNode iFly = PermissionNode.builder("bskyblock.island.fly").build();
-            userData.remove(iFly);
-            player.setAllowFlight(false);
-            player.setFlying(false);
+            PermissionNode iFly = PermissionNode.builder("bskyblock.island.fly").value(true)
+                    .withContext("NewPlayerPerks", "true").build();
+            if(userData.contains(iFly, NodeEqualityPredicate.EXACT).asBoolean()) {
+                userData.remove(iFly);
+                player.setAllowFlight(false);
+                player.setFlying(false);
+            }
         }
 
         if(skyFlightAPI != null && settings.skyflight()) {
-            PermissionNode infiniteFlight = PermissionNode.builder("skyflight.fly.infinite").value(true).build();
-            userData.remove(infiniteFlight);
-            skyFlightAPI.disableFlight(player, true);
+            PermissionNode infiniteFlight = PermissionNode.builder("skyflight.fly.infinite").value(true)
+                    .withContext("NewPlayerPerks", "true").build();
+            if(userData.contains(infiniteFlight, NodeEqualityPredicate.EXACT).asBoolean()) {
+                userData.remove(infiniteFlight);
+                skyFlightAPI.disableFlight(player, true);
+            }
         }
 
         // Void Teleport
         if(settings.voidTeleport()) {
-            PermissionNode voidTele = PermissionNode.builder("bskyblock.voidteleport").build();
-            userData.remove(voidTele);
+            PermissionNode voidTele = PermissionNode.builder("bskyblock.voidteleport").value(true)
+                    .withContext("NewPlayerPerks", "true").build();
+            if(userData.contains(voidTele, NodeEqualityPredicate.EXACT).asBoolean()) {
+                userData.remove(voidTele);
+            }
         }
 
         // Save modified User
